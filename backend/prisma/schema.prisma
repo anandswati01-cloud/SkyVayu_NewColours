@@ -1,0 +1,328 @@
+// SkyVayu — Prisma Schema
+// Mirrors the existing Supabase PostgreSQL tables
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Users (customer-facing, Google OAuth) ─────────────────────────────────────
+model Profile {
+  id        String    @id @default(uuid())
+  fullName  String?   @map("full_name")
+  email     String    @unique
+  phone     String?
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  queries   Query[]
+  bookings  Booking[]
+
+  @@map("profiles")
+}
+
+// ── Charter User Access (free query gate) ─────────────────────────────────────
+model CharterUserAccess {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  userId       String?   @map("user_id")
+  queryCount   Int       @default(0) @map("query_count")
+  isMember     Boolean   @default(false) @map("is_member")
+  firstQueryAt DateTime? @map("first_query_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("charter_user_access")
+}
+
+// ── Airports ───────────────────────────────────────────────────────────────────
+model Airport {
+  id        String   @id @default(uuid())
+  iata      String   @unique
+  name      String
+  city      String
+  country   String   @default("India")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("airports")
+}
+
+// ── Queries (charter requests from customers) ─────────────────────────────────
+model Query {
+  id              String    @id @default(uuid())
+  tripType        String    @map("trip_type")   // one_way | round_trip | multiple_sectors
+  departure       String?
+  destination     String?
+  flightDate      String?   @map("flight_date")
+  flightTime      String?   @map("flight_time")
+  returnDate      String?   @map("return_date")
+  returnTime      String?   @map("return_time")
+  passengers      Int       @default(1)
+  clientPhone     String?   @map("client_phone")
+  sectors         Json?                         // multi-sector payload
+  medivac         Boolean   @default(false)
+  pets            Boolean   @default(false)
+  infants         Boolean   @default(false)
+  vip             Boolean   @default(false)
+  aircraftCategory String   @default("fixed_wing") @map("aircraft_category")
+  status          String    @default("open")   // open | confirmed | declined | expired
+  declineReason   String?   @map("decline_reason")
+  bookingRef      String?   @map("booking_ref")
+  userId          String?   @map("user_id")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user        Profile?      @relation(fields: [userId], references: [id])
+  quotes      Quote[]
+  bookings    Booking[]
+  claims      QueryClaim[]
+  views       QueryView[]
+
+  @@map("queries")
+}
+
+// ── Quotes (submitted by operators) ───────────────────────────────────────────
+model Quote {
+  id                   String    @id @default(uuid())
+  queryId              String    @map("query_id")
+  operatorId           String    @map("operator_id")
+  operatorName         String    @map("operator_name")
+  aircraftId           String?   @map("aircraft_id")
+  aircraftType         String?   @map("aircraft_type")
+  aircraftRegistration String?   @map("aircraft_registration")
+  price                Float
+  notes                String?
+  status               String    @default("shared")  // shared | accepted | confirmed | booked
+  submittedBy          String?   @map("submitted_by")
+  seatsAvailable       Int?      @map("seats_available")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  query      Query        @relation(fields: [queryId], references: [id])
+  operator   Operator     @relation(fields: [operatorId], references: [id])
+  items      QuoteItem[]
+  bookings   Booking[]
+
+  @@map("quotes")
+}
+
+// ── Quote Items (cost breakdown) ───────────────────────────────────────────────
+model QuoteItem {
+  id                String   @id @default(uuid())
+  quoteId           String   @map("quote_id")
+  baseCharge        Float    @default(0) @map("base_charge")
+  handlingFee       Float    @default(0) @map("handling_fee")
+  crewAccommodation Float    @default(0) @map("crew_accommodation")
+  catering          Float    @default(0)
+  gstAmount         Float    @default(0) @map("gst_amount")
+  total             Float    @default(0)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  quote Quote @relation(fields: [quoteId], references: [id])
+
+  @@map("quote_items")
+}
+
+// ── Bookings (confirmed bookings) ─────────────────────────────────────────────
+model Booking {
+  id           String   @id @default(uuid())
+  queryId      String?  @map("query_id")
+  quoteId      String?  @map("quote_id")
+  ref          String   @unique
+  clientName   String   @map("client_name")
+  clientEmail  String   @map("client_email")
+  clientPhone  String   @map("client_phone")
+  operatorName String   @map("operator_name")
+  aircraft     String?
+  route        String?
+  flightDate   String?  @map("flight_date")
+  passengers   Int?
+  totalAmount  Float?   @map("total_amount")
+  platformFee  Float?   @map("platform_fee")
+  status       String   @default("confirmed")
+  userId       String?  @map("user_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  query   Query?   @relation(fields: [queryId], references: [id])
+  quote   Quote?   @relation(fields: [quoteId], references: [id])
+  user    Profile? @relation(fields: [userId], references: [id])
+  passengers_list BookingPassenger[]
+
+  @@map("bookings")
+}
+
+// ── Booking Passengers ─────────────────────────────────────────────────────────
+model BookingPassenger {
+  id         String   @id @default(uuid())
+  bookingId  String   @map("booking_id")
+  name       String
+  age        Int?
+  passportNo String?  @map("passport_no")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@map("booking_passengers")
+}
+
+// ── Operators ─────────────────────────────────────────────────────────────────
+model Operator {
+  id              String   @id @default(uuid())
+  companyName     String   @map("company_name")
+  email           String   @unique
+  phone           String?
+  address         String?
+  aircraftCategory String  @default("fixed_wing") @map("aircraft_category")
+  approvalStatus  String   @default("pending") @map("approval_status") // pending | approved | rejected
+  aopExpiryDate   String?  @map("aop_expiry_date")
+  aopUrl          String?  @map("aop_url")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  users    OperatorUser[]
+  aircraft Aircraft[]
+  quotes   Quote[]
+
+  @@map("operators")
+}
+
+// ── Operator Users (staff) ────────────────────────────────────────────────────
+model OperatorUser {
+  id          String    @id @default(uuid())
+  operatorId  String    @map("operator_id")
+  username    String    @unique
+  passwordHash String   @map("password_hash")
+  fullName    String?   @map("full_name")
+  email       String?
+  role        String    @default("employee") // owner | employee
+  isActive    Boolean   @default(true) @map("is_active")
+  isApproved  Boolean   @default(false) @map("is_approved")
+  lastLogin   DateTime? @map("last_login")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  operator Operator @relation(fields: [operatorId], references: [id])
+  claims   QueryClaim[]
+
+  @@map("operator_users")
+}
+
+// ── Aircraft ──────────────────────────────────────────────────────────────────
+model Aircraft {
+  id                String   @id @default(uuid())
+  operatorId        String   @map("operator_id")
+  aircraftType      String   @map("aircraft_type")
+  registration      String   @unique
+  seatsAvailable    Int?     @map("seats_available")
+  isActive          Boolean  @default(true) @map("is_active")
+  docStatus         String   @default("pending") @map("doc_status") // pending | approved | rejected
+  // Documents
+  corUrl            String?  @map("cor_url")
+  corExpiry         String?  @map("cor_expiry")
+  coaUrl            String?  @map("coa_url")
+  coaExpiry         String?  @map("coa_expiry")
+  arcUrl            String?  @map("arc_url")
+  arcExpiry         String?  @map("arc_expiry")
+  insuranceUrl      String?  @map("insurance_url")
+  insuranceExpiry   String?  @map("insurance_expiry")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  operator Operator @relation(fields: [operatorId], references: [id])
+
+  @@map("aircraft")
+}
+
+// ── Query Claims (locking for operator concurrency) ───────────────────────────
+model QueryClaim {
+  id             String   @id @default(uuid())
+  queryId        String   @map("query_id")
+  operatorId     String   @map("operator_id")
+  claimedBy      String   @map("claimed_by")
+  claimedByName  String?  @map("claimed_by_name")
+  expiresAt      DateTime @map("expires_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  query        Query        @relation(fields: [queryId], references: [id])
+  operatorUser OperatorUser @relation(fields: [claimedBy], references: [id])
+
+  @@unique([queryId, operatorId])
+  @@map("query_claims")
+}
+
+// ── Query Views (operator view tracking) ──────────────────────────────────────
+model QueryView {
+  id         String   @id @default(uuid())
+  queryId    String   @map("query_id")
+  operatorId String   @map("operator_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  query Query @relation(fields: [queryId], references: [id])
+
+  @@unique([queryId, operatorId])
+  @@map("query_views")
+}
+
+// ── Feedback ──────────────────────────────────────────────────────────────────
+model Feedback {
+  id        String   @id @default(uuid())
+  name      String?
+  email     String?
+  message   String
+  rating    Int?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("feedback")
+}
+
+// ── Newsletter Subscribers ────────────────────────────────────────────────────
+model NewsletterSubscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("newsletter_subscribers")
+}
+
+// ── Contact Us ────────────────────────────────────────────────────────────────
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("contact_messages")
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  type      String
+  title     String
+  body      String
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("notifications")
+}
+
+// ── Activity Logs ─────────────────────────────────────────────────────────────
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  action    String
+  entity    String?
+  entityId  String?  @map("entity_id")
+  meta      Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("activity_logs")
+}
