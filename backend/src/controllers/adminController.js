@@ -30,6 +30,20 @@ const RESOURCES = {
     table: 'bookings',
     updatable: ['status'],
   },
+  // Bookings where money moved but the booking never landed on 'confirmed' —
+  // a lost checkout callback, a webhook that never arrived, a card declined at
+  // the last step. Anything sitting here for more than a few minutes needs a
+  // human: reconcile it against Razorpay, or refund it.
+  bookings_payment_issues: {
+    list: () => sb('bookings')
+      .select('*')
+      .in('status', ['pending_payment', 'payment_failed'])
+      .order('created_at', 'desc')
+      .limit(200),
+  },
+  payment_events: {
+    list: () => sb('payment_events').select('*').order('received_at', 'desc').limit(200),
+  },
   operators: {
     list: () => sb('operators')
       .select('*,operator_users(id,username,full_name,role,email)')

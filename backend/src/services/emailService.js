@@ -66,6 +66,34 @@ async function sendBookingConfirmationEmail({ clientEmail, clientName, ref, rout
   });
 }
 
+/**
+ * Sent when a refund is issued. Deliberately states the settlement window —
+ * the money leaves Razorpay immediately but takes days to appear on the card
+ * or account, and "where is my refund" is otherwise the next support ticket.
+ */
+async function sendRefundEmail({ clientEmail, clientName, ref, route, amount, isPartial, reason }) {
+  const label = isPartial ? 'Partial refund' : 'Refund';
+
+  await sendEmail({
+    to: clientEmail,
+    subject: `${label} Issued — ${ref} | SkyVayu`,
+    html: `
+      <h2>${label} Issued</h2>
+      <p>Hi ${clientName},</p>
+      <p>A ${isPartial ? 'partial refund' : 'refund'} has been issued for your booking.</p>
+      <table>
+        <tr><td><strong>Booking Ref:</strong></td><td>${ref}</td></tr>
+        <tr><td><strong>Route:</strong></td><td>${route}</td></tr>
+        <tr><td><strong>Refunded:</strong></td><td>₹${Number(amount).toLocaleString('en-IN')}</td></tr>
+        ${reason ? `<tr><td><strong>Reason:</strong></td><td>${reason}</td></tr>` : ''}
+      </table>
+      <p>The amount goes back to the payment method you used. Banks typically take
+      5–7 working days to post it, so it may not appear on your statement immediately.</p>
+      <p>If you have not seen it after 7 working days, reply to this email with your booking ref.</p>
+    `,
+  });
+}
+
 async function sendQuoteSubmittedEmail({ quoteId, operatorName, route }) {
   await sendEmail({
     to: ADMIN_EMAIL,
@@ -109,6 +137,7 @@ module.exports = {
   sendEmail,
   sendNewQueryEmail,
   sendBookingConfirmationEmail,
+  sendRefundEmail,
   sendQuoteSubmittedEmail,
   sendDocExpiryReminderEmail,
   sendPasswordResetEmail,

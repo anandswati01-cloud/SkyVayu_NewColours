@@ -36,6 +36,10 @@ services:
         sync: false
       - key: RAZORPAY_KEY_SECRET
         sync: false
+      # Signing secret for the Razorpay webhook, set when the webhook is created
+      # in the dashboard. Not the same value as RAZORPAY_KEY_SECRET.
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
       # Comma-separated production frontend origins, no trailing slash:
       #   https://skyvayu.com,https://www.skyvayu.com
       - key: ALLOWED_ORIGINS

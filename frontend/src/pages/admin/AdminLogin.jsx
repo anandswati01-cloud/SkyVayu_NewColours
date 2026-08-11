@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../services/supabase'
+import { adminApi } from '../../services/api'
 
 const ADMIN_EMAIL = 'anandswati01@gmail.com'
 
@@ -21,18 +22,22 @@ export default function AdminLogin() {
       const { data, error: authErr } = await supabase.auth.signInWithPassword({ email: ADMIN_EMAIL, password })
       if (authErr) { setError(authErr.message || 'Invalid password.'); return }
 
-      // Check is_admin flag in profiles table
-      const { data: profile, error: profileErr } = await supabase
-        .from('profiles').select('is_admin').eq('id', data.user.id).single()
+      // Signing in only proves the password. Whether this account is an admin is
+      // answered by the API, which re-reads profiles.is_admin behind the service
+      // role key. Asking the database straight from the browser — as this used to
+      // — breaks the moment row level security is enabled, and proved nothing
+      // regardless, since every admin request is re-checked server-side anyway.
+      localStorage.setItem('sv_admin_token', data.session.access_token)
 
-      if (profileErr || !profile?.is_admin) {
+      try {
+        await adminApi.me()
+      } catch {
+        localStorage.removeItem('sv_admin_token')
         await supabase.auth.signOut()
         setError('Access denied. Not an admin account.')
         return
       }
 
-      // Store session token for admin API calls
-      localStorage.setItem('sv_admin_token', data.session.access_token)
       localStorage.setItem('sv_admin_user', JSON.stringify({ id: data.user.id, email: data.user.email }))
       navigate('/admin/dashboard')
     } catch (err) {

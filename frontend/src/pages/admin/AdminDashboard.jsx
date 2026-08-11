@@ -23,6 +23,21 @@ const admin = {
   remove: (resource, id) => adminApi.remove(resource, id)
     .then(() => ({ ok: true }))
     .catch(err => { console.error(`[admin] delete ${resource} failed:`, err.message); return { ok: false } }),
+
+  // These two move real money, so unlike the calls above they surface the
+  // server's message rather than collapsing every failure into ok:false — an
+  // admin needs to know whether a refund bounced on the balance or the gateway.
+  refund: (body) => adminApi.refund(body)
+    .then(res => ({ ok: true, data: res.data }))
+    .catch(err => ({ ok: false, message: err.message })),
+
+  reconcile: (bookingId) => adminApi.reconcile(bookingId)
+    .then(res => ({ ok: true, data: res.data }))
+    .catch(err => ({ ok: false, message: err.message })),
+
+  dismiss: (bookingId) => adminApi.dismiss(bookingId)
+    .then(res => ({ ok: true, data: res.data }))
+    .catch(err => ({ ok: false, message: err.message })),
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -38,6 +53,25 @@ const STATUS_COLORS = {
   rejected: { bg: 'rgba(226,75,74,0.1)', color: '#E24B4A', border: 'rgba(226,75,74,0.25)' },
   confirmed: { bg: 'rgba(24,95,165,0.15)', color: '#85B7EB', border: 'rgba(24,95,165,0.3)' },
   open: { bg: 'rgba(59,109,17,0.2)', color: '#97C459', border: 'rgba(59,109,17,0.3)' },
+  // Payment states. pending_payment is amber rather than neutral on purpose:
+  // the money has usually already left the customer's account.
+  pending_payment: { bg: 'rgba(239,159,39,0.1)', color: '#EF9F27', border: 'rgba(239,159,39,0.3)' },
+  payment_failed: { bg: 'rgba(226,75,74,0.1)', color: '#E24B4A', border: 'rgba(226,75,74,0.25)' },
+  refunded: { bg: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', border: 'rgba(255,255,255,0.15)' },
+  partially_refunded: { bg: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', border: 'rgba(255,255,255,0.15)' },
+  processed: { bg: 'rgba(59,109,17,0.2)', color: '#97C459', border: 'rgba(59,109,17,0.3)' },
+  received: { bg: 'rgba(239,159,39,0.1)', color: '#EF9F27', border: 'rgba(239,159,39,0.3)' },
+  ignored: { bg: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', border: 'rgba(255,255,255,0.12)' },
+  failed: { bg: 'rgba(226,75,74,0.1)', color: '#E24B4A', border: 'rgba(226,75,74,0.25)' },
+}
+
+/** How long a booking has been sitting unresolved — the thing that makes it urgent. */
+function ageLabel(iso) {
+  if (!iso) return '—'
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000)
+  if (mins < 60) return `${mins}m ago`
+  if (mins < 1440) return `${Math.floor(mins / 60)}h ago`
+  return `${Math.floor(mins / 1440)}d ago`
 }
 
 function Badge({ status, label }) {
@@ -61,6 +95,7 @@ function Sidebar({ section, setSection, onLogout, counts }) {
     { key: 'aircraft', label: 'Aircraft', badge: counts.pendingAircraft },
     { key: 'employees', label: 'Employees', badge: counts.pendingEmployees },
     { key: 'bookings', label: 'Bookings' },
+    { key: 'payments', label: 'Payments', badge: counts.paymentIssues },
     { key: 'queries', label: 'Queries' },
     { key: 'feedback', label: 'Feedback' },
     { key: 'database', label: '⊞ Database' },
@@ -372,6 +407,11 @@ function EmployeesSection({ onCountChange }) {
 }
 
 // ── Bookings Section ───────────────────────────────────────────────────────────
+
+// Statuses owned by the payment flow. They change as a consequence of money
+// moving, never by an admin picking from a list.
+const PAYMENT_MANAGED = ['pending_payment', 'payment_failed', 'refunded', 'partially_refunded']
+
 function BookingsSection() {
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
@@ -392,14 +432,20 @@ function BookingsSection() {
     return !q || b.ref?.toLowerCase().includes(q) || b.client_name?.toLowerCase().includes(q) || b.client_email?.toLowerCase().includes(q) || b.route?.toLowerCase().includes(q)
   })
 
-  const total = bookings.reduce((a, b) => a + Number(b.total_amount || 0), 0)
+  // Revenue counts only bookings that were actually paid for, net of refunds.
+  // Summing every row would inflate it with pending_payment bookings that were
+  // never charged and refunded ones where the money has already gone back.
+  const EARNED = ['confirmed', 'in_flight', 'completed', 'partially_refunded']
+  const total = bookings.reduce((a, b) => (
+    EARNED.includes(b.status) ? a + Number(b.total_amount || 0) - Number(b.refund_amount || 0) : a
+  ), 0)
 
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
         <StatCard num={bookings.length} label="Total bookings" />
         <StatCard num={bookings.filter(b => b.status === 'confirmed').length} label="Confirmed" color="#97C459" />
-        <StatCard num={fmt(total)} label="Total revenue" color="#fbbf24" />
+        <StatCard num={fmt(total)} label="Net revenue" color="#fbbf24" />
       </div>
 
       <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by ref, client name, email or route…"
@@ -424,9 +470,17 @@ function BookingsSection() {
                 <td style={{ padding: '10px 12px', color: 'rgba(255,255,255,0.6)' }}>{b.total_amount ? fmt(b.total_amount) : '—'}</td>
                 <td style={{ padding: '10px 12px' }}><Badge status={b.status} label={b.status} /></td>
                 <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>
-                  <select value={b.status} onChange={e => updateStatus(b.id, e.target.value)} style={{ background: 'rgba(255,255,255,0.06)', border: '0.5px solid rgba(255,255,255,0.15)', borderRadius: 6, color: '#fff', fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontFamily: 'var(--font-body)', outline: 'none' }}>
-                    {['confirmed', 'in_flight', 'completed', 'cancelled'].map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
+                  {/* Payment states are deliberately not editable here. A booking
+                      reaches 'confirmed' only after the money is verified against
+                      Razorpay — offering it in a dropdown would put a one-click
+                      bypass of that check next to every unpaid booking. */}
+                  {PAYMENT_MANAGED.includes(b.status) ? (
+                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>Manage in Payments</span>
+                  ) : (
+                    <select value={b.status} onChange={e => updateStatus(b.id, e.target.value)} style={{ background: 'rgba(255,255,255,0.06)', border: '0.5px solid rgba(255,255,255,0.15)', borderRadius: 6, color: '#fff', fontSize: 11, padding: '4px 8px', cursor: 'pointer', fontFamily: 'var(--font-body)', outline: 'none' }}>
+                      {['confirmed', 'in_flight', 'completed', 'cancelled'].map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  )}
                 </td>
               </tr>
             ))}
@@ -434,6 +488,285 @@ function BookingsSection() {
         </table>
         {!loading && filtered.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)' }}>No bookings found.</div>}
       </div>
+    </div>
+  )
+}
+
+// ── Payments Section ───────────────────────────────────────────────────────────
+//
+// The two failure modes this exists for:
+//
+//   1. Money taken, booking never confirmed. The checkout callback is fired by
+//      the customer's browser, so a closed tab or a dropped connection loses it.
+//      The webhook normally covers that; Reconcile is for when it did not, and
+//      asks Razorpay directly what happened to the order.
+//   2. Money that needs to go back. Refunds issued here are recorded against the
+//      booking; a refund issued from the Razorpay dashboard instead arrives via
+//      the refund.processed webhook and lands in the same state.
+function PaymentsSection({ onCountChange }) {
+  const [tab, setTab] = useState('issues')
+  const [issues, setIssues] = useState([])
+  const [bookings, setBookings] = useState([])
+  const [events, setEvents] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState(null)          // booking id currently being acted on
+  const [refundForm, setRefundForm] = useState({}) // booking id -> { amount, reason }
+  const [search, setSearch] = useState('')
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    const [i, b, e] = await Promise.all([
+      admin.list('bookings_payment_issues'),
+      admin.list('bookings'),
+      admin.list('payment_events'),
+    ])
+    setIssues(i.ok ? i.data : [])
+    setBookings(b.ok ? b.data : [])
+    setEvents(e.ok ? e.data : [])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { load() }, [load])
+  useEffect(() => { onCountChange({ paymentIssues: issues.length }) }, [issues])
+
+  async function reconcile(booking) {
+    setBusy(booking.id)
+    const res = await admin.reconcile(booking.id)
+    setBusy(null)
+
+    if (!res.ok) return showToast(res.message || 'Reconcile failed', 'error')
+
+    const outcome = res.data.outcome
+    if (outcome === 'confirmed') showToast(`${booking.ref} confirmed — payment found at Razorpay`, 'success')
+    else if (outcome === 'already_confirmed') showToast(`${booking.ref} was already confirmed`, 'info')
+    else showToast(`No captured payment at Razorpay for ${booking.ref} (${res.data.attempts || 0} attempt(s)). The customer was not charged.`, 'info')
+
+    load()
+  }
+
+  async function dismissBooking(booking) {
+    if (!confirm(`Write off ${booking.ref} as unpaid?\n\nRazorpay is re-checked first — if any payment was captured this will be refused.`)) return
+    setBusy(booking.id)
+    const res = await admin.dismiss(booking.id)
+    setBusy(null)
+
+    if (!res.ok) return showToast(res.message || 'Could not dismiss', 'error')
+    showToast(`${booking.ref} written off as unpaid`, 'success')
+    load()
+  }
+
+  async function issueRefund(booking) {
+    const form = refundForm[booking.id] || {}
+    setBusy(booking.id)
+    // An empty amount means the full refundable balance — the server computes
+    // that ceiling, so it is not calculated here.
+    const res = await admin.refund({
+      bookingId: booking.id,
+      amount: form.amount ? Number(form.amount) : undefined,
+      reason: form.reason || undefined,
+    })
+    setBusy(null)
+
+    if (!res.ok) return showToast(res.message || 'Refund failed', 'error')
+
+    showToast(`Refund of ${fmt(res.data.refund.amount / 100)} issued for ${booking.ref}`, 'success')
+    setRefundForm(f => ({ ...f, [booking.id]: undefined }))
+    load()
+  }
+
+  const refundable = bookings.filter(b => {
+    const remaining = Number(b.total_amount || 0) - Number(b.refund_amount || 0)
+    if (!b.payment_id || remaining <= 0) return false
+    const q = search.toLowerCase()
+    return !q || b.ref?.toLowerCase().includes(q) || b.client_name?.toLowerCase().includes(q) || b.client_email?.toLowerCase().includes(q)
+  })
+
+  const refundedTotal = bookings.reduce((a, b) => a + Number(b.refund_amount || 0), 0)
+  const stuck = issues.filter(b => b.status === 'pending_payment').length
+
+  const tabStyle = active => ({ padding: '10px 18px', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: active ? 'var(--gold)' : 'rgba(255,255,255,0.3)', borderBottom: `2px solid ${active ? 'var(--gold)' : 'transparent'}`, cursor: 'pointer', background: 'none', border: 'none', whiteSpace: 'nowrap' })
+  const card = { background: 'rgba(22,32,64,0.55)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '18px 22px', marginBottom: 12 }
+  const btn = (color, disabled) => ({ height: 36, padding: '0 18px', background: disabled ? 'rgba(255,255,255,0.05)' : 'transparent', border: `0.5px solid ${disabled ? 'rgba(255,255,255,0.12)' : color}`, color: disabled ? 'rgba(255,255,255,0.25)' : color, borderRadius: 8, fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', cursor: disabled ? 'not-allowed' : 'pointer' })
+  const input = { height: 36, padding: '0 12px', background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.3)', borderRadius: 8, color: '#fff', fontSize: 13, fontFamily: 'var(--font-body)', outline: 'none' }
+  const kv = { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 2 }
+
+  return (
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
+        <StatCard num={stuck} label="Paid but unconfirmed" color={stuck ? '#EF9F27' : undefined} />
+        <StatCard num={issues.length - stuck} label="Payment failed" color="#E24B4A" />
+        <StatCard num={bookings.filter(b => Number(b.refund_amount || 0) > 0).length} label="Refunded bookings" />
+        <StatCard num={fmt(refundedTotal)} label="Total refunded" />
+      </div>
+
+      <div style={{ display: 'flex', borderBottom: '0.5px solid rgba(255,255,255,0.1)', marginBottom: 20, overflowX: 'auto' }}>
+        <button style={tabStyle(tab === 'issues')} onClick={() => setTab('issues')}>Needs attention ({issues.length})</button>
+        <button style={tabStyle(tab === 'refunds')} onClick={() => setTab('refunds')}>Issue refund</button>
+        <button style={tabStyle(tab === 'events')} onClick={() => setTab('events')}>Webhook log ({events.length})</button>
+      </div>
+
+      {loading && <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)' }}>Loading…</div>}
+
+      {/* ── Needs attention ─────────────────────────────────────────────────── */}
+      {!loading && tab === 'issues' && (
+        <>
+          {!issues.length && (
+            <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>
+              Nothing stuck. Every payment either confirmed or was never charged.
+            </div>
+          )}
+          {issues.map(b => (
+            <div key={b.id} style={card}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14, gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 500 }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)', fontSize: 13 }}>{b.ref}</span>
+                    {' · '}{b.client_name}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
+                    {b.client_email} · {b.client_phone || 'no phone'} · created {ageLabel(b.created_at)}
+                  </div>
+                </div>
+                <Badge status={b.status} label={b.status.replace(/_/g, ' ')} />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 14 }}>
+                {[
+                  ['Amount', fmt(b.total_amount)],
+                  ['Route', b.route || '—'],
+                  ['Razorpay order', b.payment_order_id || 'not linked'],
+                  ['Flight date', b.flight_date || '—'],
+                ].map(([k, v]) => (
+                  <div key={k}>
+                    <div style={kv}>{k}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', wordBreak: 'break-all' }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+
+              {b.payment_failed_reason && (
+                <div style={{ fontSize: 12, color: '#E24B4A', marginBottom: 14 }}>Gateway said: {b.payment_failed_reason}</div>
+              )}
+
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', paddingTop: 14, borderTop: '0.5px solid rgba(255,255,255,0.1)', flexWrap: 'wrap' }}>
+                <button onClick={() => reconcile(b)} disabled={busy === b.id || !b.payment_order_id} style={btn('#97C459', busy === b.id || !b.payment_order_id)}>
+                  {busy === b.id ? 'Checking…' : '↻ Reconcile with Razorpay'}
+                </button>
+                <button onClick={() => dismissBooking(b)} disabled={busy === b.id} style={btn('rgba(255,255,255,0.3)', busy === b.id)}>
+                  ✕ Write off as unpaid
+                </button>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', flex: 1, minWidth: 200 }}>
+                  {b.payment_order_id
+                    ? 'Reconcile asks Razorpay whether this order was paid and confirms it if so.'
+                    : 'Checkout never opened for this booking — nobody was charged.'}
+                </span>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+
+      {/* ── Issue refund ────────────────────────────────────────────────────── */}
+      {!loading && tab === 'refunds' && (
+        <>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by ref, client name or email…"
+            style={{ ...input, width: '100%', marginBottom: 16 }} />
+
+          {!refundable.length && (
+            <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>
+              No bookings with a refundable balance.
+            </div>
+          )}
+
+          {refundable.map(b => {
+            const already = Number(b.refund_amount || 0)
+            const remaining = Number(b.total_amount || 0) - already
+            const form = refundForm[b.id]
+            const open = form !== undefined
+
+            return (
+              <div key={b.id} style={card}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12, gap: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 500 }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)', fontSize: 13 }}>{b.ref}</span>
+                      {' · '}{b.client_name}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
+                      {b.route || '—'} · {b.flight_date || 'no date'} · paid {ageLabel(b.paid_at || b.created_at)}
+                    </div>
+                  </div>
+                  <Badge status={b.status} label={String(b.status).replace(/_/g, ' ')} />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 14 }}>
+                  {[
+                    ['Paid', fmt(b.total_amount)],
+                    ['Already refunded', already ? fmt(already) : '—'],
+                    ['Refundable', fmt(remaining)],
+                  ].map(([k, v]) => (
+                    <div key={k}>
+                      <div style={kv}>{k}</div>
+                      <div style={{ fontSize: 13, color: k === 'Refundable' ? 'var(--gold)' : 'rgba(255,255,255,0.6)' }}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center', paddingTop: 14, borderTop: '0.5px solid rgba(255,255,255,0.1)', flexWrap: 'wrap' }}>
+                  {!open && (
+                    <button onClick={() => setRefundForm(f => ({ ...f, [b.id]: { amount: '', reason: '' } }))} style={btn('#E24B4A', false)}>
+                      ↩ Refund
+                    </button>
+                  )}
+                  {open && (
+                    <>
+                      <input value={form.amount} onChange={e => setRefundForm(f => ({ ...f, [b.id]: { ...form, amount: e.target.value } }))}
+                        placeholder={`Amount (blank = full ${fmt(remaining)})`} style={{ ...input, width: 220 }} />
+                      <input value={form.reason} onChange={e => setRefundForm(f => ({ ...f, [b.id]: { ...form, reason: e.target.value } }))}
+                        placeholder="Reason (shown to the customer)" style={{ ...input, flex: 1, minWidth: 200 }} />
+                      <button onClick={() => issueRefund(b)} disabled={busy === b.id}
+                        style={{ height: 36, padding: '0 18px', background: busy === b.id ? 'rgba(226,75,74,0.4)' : '#E24B4A', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, cursor: busy === b.id ? 'wait' : 'pointer' }}>
+                        {busy === b.id ? 'Refunding…' : 'Confirm refund'}
+                      </button>
+                      <button onClick={() => setRefundForm(f => ({ ...f, [b.id]: undefined }))} style={btn('rgba(255,255,255,0.3)', false)}>Cancel</button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </>
+      )}
+
+      {/* ── Webhook log ─────────────────────────────────────────────────────── */}
+      {!loading && tab === 'events' && (
+        <div style={{ overflowX: 'auto' }}>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 16, lineHeight: 1.6 }}>
+            Every delivery Razorpay has made to <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--gold)' }}>/api/payments/webhook</code>.
+            An empty list once payments are live usually means the webhook URL or its secret is wrong in the Razorpay dashboard.
+          </p>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr>{['Received', 'Event', 'Outcome', 'Payment', 'Order', 'Note'].map(h => (
+                <th key={h} style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', padding: '8px 12px', textAlign: 'left', borderBottom: '0.5px solid rgba(255,255,255,0.1)', whiteSpace: 'nowrap' }}>{h}</th>
+              ))}</tr>
+            </thead>
+            <tbody>
+              {events.map(e => (
+                <tr key={e.id} style={{ borderBottom: '0.5px solid rgba(255,255,255,0.04)' }}>
+                  <td style={{ padding: '10px 12px', color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap' }}>{fmtDateTime(e.received_at)}</td>
+                  <td style={{ padding: '10px 12px', color: '#fff', fontFamily: 'var(--font-mono)', fontSize: 11 }}>{e.event}</td>
+                  <td style={{ padding: '10px 12px' }}><Badge status={e.status} label={e.status} /></td>
+                  <td style={{ padding: '10px 12px', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>{e.payment_id || '—'}</td>
+                  <td style={{ padding: '10px 12px', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>{e.order_id || '—'}</td>
+                  <td style={{ padding: '10px 12px', color: e.error ? '#E24B4A' : 'rgba(255,255,255,0.3)' }}>{e.error || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {!events.length && <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)' }}>No webhook deliveries recorded yet.</div>}
+        </div>
+      )}
     </div>
   )
 }
@@ -662,7 +995,14 @@ function DatabaseSection() {
 export default function AdminDashboard() {
   const navigate = useNavigate()
   const [section, setSection] = useState('operators')
-  const [counts, setCounts] = useState({ pendingOps: 0, pendingAircraft: 0, pendingEmployees: 0 })
+  const [counts, setCounts] = useState({ pendingOps: 0, pendingAircraft: 0, pendingEmployees: 0, paymentIssues: 0 })
+
+  // Whoever actually signed in — the top bar used to say "Swati" regardless of
+  // which account it was, which is misleading the moment there is more than one
+  // admin. AdminLogin already stores the real identity.
+  const [adminEmail] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('sv_admin_user') || '{}').email || '' } catch { return '' }
+  })
 
   useEffect(() => {
     const token = localStorage.getItem('sv_admin_token')
@@ -678,7 +1018,7 @@ export default function AdminDashboard() {
     navigate('/admin')
   }
 
-  const sectionTitle = { operators: 'Operators', aircraft: 'Aircraft Approvals', employees: 'Employee Approvals', bookings: 'Bookings', queries: 'Queries', feedback: 'Feedback', database: 'Database' }
+  const sectionTitle = { operators: 'Operators', aircraft: 'Aircraft Approvals', employees: 'Employee Approvals', bookings: 'Bookings', payments: 'Payments', queries: 'Queries', feedback: 'Feedback', database: 'Database' }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--navy)' }}>
@@ -692,7 +1032,9 @@ export default function AdminDashboard() {
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '1.5px', textTransform: 'uppercase', background: 'rgba(22,32,64,0.55)', border: '0.5px solid rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: 3, color: 'rgba(255,255,255,0.4)' }}>Super Admin</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.5px' }}>Logged in as Swati</span>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.5px' }}>
+              {adminEmail ? `Logged in as ${adminEmail}` : 'Logged in'}
+            </span>
             <button onClick={logout} style={{ height: 30, padding: '0 14px', background: 'transparent', border: '0.5px solid rgba(255,255,255,0.3)', borderRadius: 8, color: 'rgba(255,255,255,0.6)', fontSize: 10, fontFamily: 'var(--font-mono)', letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer' }}>Sign out</button>
           </div>
         </div>
@@ -706,6 +1048,7 @@ export default function AdminDashboard() {
           {section === 'aircraft' && <AircraftSection onCountChange={mergeCount} />}
           {section === 'employees' && <EmployeesSection onCountChange={mergeCount} />}
           {section === 'bookings' && <BookingsSection />}
+          {section === 'payments' && <PaymentsSection onCountChange={mergeCount} />}
           {section === 'queries' && <QueriesSection />}
           {section === 'feedback' && <FeedbackSection />}
           {section === 'database' && <DatabaseSection />}

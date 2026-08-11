@@ -20,6 +20,8 @@ import Help from './pages/Help'
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import Cookies from './pages/Cookies'
+import Refunds from './pages/Refunds'
+import Contact from './pages/Contact'
 import Register from './pages/Register'
 
 // Operator pages don't show the main Navbar/Footer
@@ -52,6 +54,8 @@ export default function App() {
         <Route path="/privacy" element={<CustomerLayout><Privacy /></CustomerLayout>} />
         <Route path="/terms" element={<CustomerLayout><Terms /></CustomerLayout>} />
         <Route path="/cookies" element={<CustomerLayout><Cookies /></CustomerLayout>} />
+        <Route path="/refunds" element={<CustomerLayout><Refunds /></CustomerLayout>} />
+        <Route path="/contact" element={<CustomerLayout><Contact /></CustomerLayout>} />
 
         {/* Operator portal (no Navbar/Footer — full-screen app) */}
         <Route path="/operator" element={<OperatorLogin />} />

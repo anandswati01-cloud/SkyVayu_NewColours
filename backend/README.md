@@ -121,6 +121,87 @@ trailing slash) — in production, localhost origins are **not** auto-allowed.
 
 ---
 
+## Payments (Razorpay)
+
+### The rule everything else follows
+
+**The browser never states a price.** The client sends a `quoteId`; the amount
+is read from the quote row, the order is created server-side, and after checkout
+the payment is re-fetched from Razorpay and its captured amount compared to what
+we asked for. A tampered client can change what it *displays*, never what it
+*pays*. There is no code path to `status = 'confirmed'` that skips that check.
+
+If `RAZORPAY_KEY_ID` or `RAZORPAY_KEY_SECRET` is missing the endpoints return
+**503, not a free booking**.
+
+### How a booking gets confirmed
+
+Three routes to the same place, all funnelling through one `confirmBooking()`:
+
+1. **Checkout callback** (`POST /verify`) — the happy path. Depends on the
+   customer's browser surviving the round trip to the bank, which it often does
+   not.
+2. **Webhook** (`POST /webhook`) — server to server, so a closed tab, a dead
+   network or a locked phone no longer costs a confirmation. This is what makes
+   the flow safe in production; without it, money gets taken for bookings that
+   stay `pending_payment` forever.
+3. **Reconcile** (`POST /reconcile/:bookingId`, admin) — asks Razorpay directly
+   about a stuck order. Available in the admin dashboard under **Payments →
+   Needs attention**.
+
+The webhook and the callback can arrive simultaneously. The `UPDATE` that
+confirms a booking is conditional on it still being `pending_payment`, so
+whichever arrives first wins and the other becomes a no-op — that is what stops
+two confirmation emails going out for one booking. Redeliveries are also caught
+earlier, by the primary key on `payment_events.id`.
+
+### Razorpay dashboard setup
+
+1. **API keys** — Account & Settings → API Keys. Test keys (`rzp_test_…`) work
+   end to end without KYC; swap for live keys after activation.
+2. **Webhook** — Settings → Webhooks → Add New Webhook:
+   - URL: `https://<your-api-host>/api/payments/webhook`
+   - Secret: any strong value you choose — set the same value as
+     `RAZORPAY_WEBHOOK_SECRET`. It is **not** the API key secret.
+   - Active events: `payment.captured`, `payment.failed`, `refund.processed`
+3. **Verify it arrives** — admin dashboard → **Payments → Webhook log**. An
+   empty log once payments are live means the URL or the secret is wrong.
+
+Without `RAZORPAY_WEBHOOK_SECRET` the endpoint returns 503 and logs loudly
+rather than trusting an unverified POST — anyone could otherwise confirm a
+booking by hitting the URL.
+
+### Activation checklist
+
+Razorpay's review requires these pages to be live and reachable, each at its own
+URL: Terms (`/terms`), Privacy (`/privacy`), **Refund & Cancellation**
+(`/refunds`), **Contact Us** (`/contact`) with a real registered address and
+phone, and pricing (`/fleet`). All exist; the `[BRACKETED]` placeholders in
+`Terms.jsx`, `Refunds.jsx` and `Contact.jsx` must be filled with the registered
+entity's real details first.
+
+For GST invoices, set `VITE_COMPANY_LEGAL_NAME`, `VITE_COMPANY_ADDRESS`,
+`VITE_COMPANY_GSTIN` and `VITE_COMPANY_STATE` in the frontend environment. Until
+`VITE_COMPANY_GSTIN` is set the document prints as "INVOICE" rather than "TAX
+INVOICE" and omits the GSTIN line.
+
+### Refunds
+
+`POST /api/payments/refund` (admin) refunds fully or partially. The ceiling is
+computed server-side from `total_amount − refund_amount`, never taken from the
+request. Refunds issued from the Razorpay dashboard instead of through this
+endpoint arrive as a `refund.processed` webhook and land in the same state.
+
+### Migrations this depends on
+
+`001_payment_columns.sql` and `002_payment_webhooks_and_refunds.sql` must be
+applied. Without 001, `payment_order_id` is never stored and the webhook cannot
+match a payment to a booking. Without 002 the webhook still works — the confirm
+path is independently idempotent — but replay protection and the webhook log are
+gone, and the server logs a warning on every delivery saying so.
+
+---
+
 ## API Reference
 
 ### Auth — `/api/auth`
@@ -187,6 +268,18 @@ trailing slash) — in production, localhost origins are **not** auto-allowed.
 | DELETE | `/api/feedback/:id` | Admin | Delete feedback |
 | POST | `/api/feedback/newsletter` | Public | Newsletter subscription |
 | POST | `/api/feedback/contact` | Public | Contact form submission |
+
+### Payments — `/api/payments`
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/payments/order` | Optional | Open a Razorpay order for a quote (price read from DB) |
+| POST | `/api/payments/verify` | Optional | Verify the checkout callback and confirm the booking |
+| POST | `/api/payments/webhook` | Signature | Razorpay server-to-server confirmation |
+| POST | `/api/payments/refund` | Admin | Refund a booking, fully or partially |
+| POST | `/api/payments/reconcile/:bookingId` | Admin | Ask Razorpay what happened to a stuck booking |
+
+See [Payments](#payments-razorpay) below for the flow and the dashboard setup.
 
 ### Operators — `/api/operators`
 

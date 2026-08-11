@@ -88,6 +88,36 @@ async function authenticateAdmin(req, res, next) {
 }
 
 /**
+ * Accepts either kind of token, but requires one.
+ *
+ * `authenticate` only verifies tokens this API signed, so a customer's Supabase
+ * token fails it with a 401 — which is why the customer's own booking list came
+ * back empty for everyone. This is for routes genuinely used by both audiences,
+ * where the handler then scopes the result by who the caller turned out to be.
+ * Unlike optionalAuth it never lets an anonymous caller through.
+ */
+async function authenticateAny(req, res, next) {
+  const token = bearer(req);
+  if (!token) {
+    return res.status(401).json({ error: 'Missing or invalid Authorization header.' });
+  }
+
+  try {
+    req.user = jwt.verify(token, JWT_SECRET); // operator/admin
+    return next();
+  } catch {
+    // Not one of ours — try Supabase before giving up.
+  }
+
+  try {
+    req.user = toUser(await verifySupabaseToken(token));
+    return next();
+  } catch (err) {
+    return res.status(err.status || 401).json({ error: err.message || 'Invalid token.' });
+  }
+}
+
+/**
  * Require a specific role.
  * Usage: requireRole('admin') or requireRole('operator')
  */
@@ -128,4 +158,4 @@ async function optionalAuth(req, res, next) {
   next();
 }
 
-module.exports = { authenticate, authenticateSupabase, authenticateAdmin, requireRole, optionalAuth };
+module.exports = { authenticate, authenticateSupabase, authenticateAdmin, authenticateAny, requireRole, optionalAuth };

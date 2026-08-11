@@ -151,6 +151,10 @@ const config = {
   // ── Payments ───────────────────────────────────────────────────────────────
   RAZORPAY_KEY_ID: str('RAZORPAY_KEY_ID', { fallback: '' }),
   RAZORPAY_KEY_SECRET: str('RAZORPAY_KEY_SECRET', { fallback: '' }),
+  // Set on the webhook itself in the Razorpay dashboard, NOT the same value as
+  // the key secret. Without it the webhook endpoint rejects every delivery —
+  // an unverified webhook would let anyone confirm a booking by POSTing to it.
+  RAZORPAY_WEBHOOK_SECRET: str('RAZORPAY_WEBHOOK_SECRET', { fallback: '' }),
 
   // ── CORS ───────────────────────────────────────────────────────────────────
   // CORS_ORIGIN is accepted as an alias so older .env files keep working.

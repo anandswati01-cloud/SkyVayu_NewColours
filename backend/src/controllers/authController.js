@@ -5,18 +5,49 @@ const { signAccessToken, signRefreshToken, verifyRefreshToken } = require('../ut
 const { success, error } = require('../utils/response');
 const { sendPasswordResetEmail } = require('../services/emailService');
 
-const resetTokens = new Map();
+/**
+ * Every condition that must still hold for an account to be usable.
+ *
+ * Login checked all of these; refresh checked only `is_active`. That gap meant
+ * revoking an operator's approval did not actually lock anyone out — an already
+ * signed-in user could keep minting fresh access tokens off their 30-day
+ * refresh token for a month. Both paths now run the same check.
+ *
+ * @returns {Promise<{status: number, message: string}|null>} null when usable
+ */
+async function checkAccountUsable(user) {
+  if (!user.is_active) return { status: 403, message: 'This account has been deactivated.' };
+  if (user.role === 'employee' && !user.is_approved) return { status: 403, message: 'Your account is pending approval.' };
+
+  // An account with no operator_id reached the operators lookup as
+  // `id=eq.null`, which Postgres rejects — leaking a raw driver error to the
+  // caller as a 400. There is one such row today (the super_admin account),
+  // which cannot sign in either way; this just says so honestly.
+  if (!user.operator_id) {
+    return { status: 403, message: 'This account is not linked to an operator.' };
+  }
+
+  const opRows = await sb('operators').select('*').eq('id', user.operator_id).run();
+  if (!opRows || !opRows.length) return { status: 404, message: 'Operator account not found.' };
+
+  const status = opRows[0].approval_status;
+  if (status === 'pending') return { status: 403, message: 'Your operator registration is pending approval.' };
+  if (status === 'rejected') return { status: 403, message: 'Your operator registration was not approved.' };
+
+  return null;
+}
+
+/** Reset tokens are stored hashed; the raw value only ever exists in the email. */
+function hashResetToken(token) {
+  return crypto.createHash('sha256').update(String(token)).digest('hex');
+}
 
 // POST /api/auth/login
 async function login(req, res, next) {
   try {
     const { username, password } = req.body;
 
-    const users = await sb('operator_users')
-      .select('*')
-      .or ? null : null; // fallback to two queries
-
-    // Find by username
+    // Find by username, then by email.
     let rows = await sb('operator_users').select('*').eq('username', username.toLowerCase()).run();
     if (!rows || !rows.length) {
       rows = await sb('operator_users').select('*').eq('email', username.toLowerCase()).run();
@@ -28,15 +59,11 @@ async function login(req, res, next) {
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatch) return error(res, 'Invalid username or password.', 401);
 
-    if (!user.is_active) return error(res, 'This account has been deactivated.', 403);
-    if (user.role === 'employee' && !user.is_approved) return error(res, 'Your account is pending approval.', 403);
+    const gate = await checkAccountUsable(user);
+    if (gate) return error(res, gate.message, gate.status);
 
     const opRows = await sb('operators').select('*').eq('id', user.operator_id).run();
-    if (!opRows || !opRows.length) return error(res, 'Operator account not found.', 404);
     const operator = opRows[0];
-
-    if (operator.approval_status === 'pending') return error(res, 'Your operator registration is pending approval.', 403);
-    if (operator.approval_status === 'rejected') return error(res, 'Your operator registration was not approved.', 403);
 
     // Update last_login (fire and forget)
     sb('operator_users').update({ last_login: new Date().toISOString() }).eq('id', user.id).run().catch(() => {});
@@ -92,9 +119,17 @@ async function refresh(req, res, next) {
     if (!refreshToken) return error(res, 'Refresh token required.', 400);
     let payload;
     try { payload = verifyRefreshToken(refreshToken); } catch { return error(res, 'Invalid or expired refresh token.', 401); }
+
     const rows = await sb('operator_users').select('*').eq('id', payload.id).run();
-    if (!rows || !rows.length || !rows[0].is_active) return error(res, 'User not found or deactivated.', 401);
+    if (!rows || !rows.length) return error(res, 'User not found or deactivated.', 401);
     const user = rows[0];
+
+    // Re-run every condition login enforces. A refresh token outlives an access
+    // token by weeks, so this is the only point at which a revoked approval or
+    // a deactivated account actually takes effect.
+    const gate = await checkAccountUsable(user);
+    if (gate) return error(res, gate.message, gate.status);
+
     return success(res, { accessToken: signAccessToken({ id: user.id, email: user.email, role: user.role, type: 'operator', operatorId: user.operator_id }) });
   } catch (err) { next(err); }
 }
@@ -108,7 +143,15 @@ async function forgotPassword(req, res, next) {
     if (!rows || !rows.length) return success(res, { message: 'If an account exists, a reset link has been sent.' });
     const user = rows[0];
     const token = crypto.randomBytes(32).toString('hex');
-    resetTokens.set(token, { userId: user.id, expires: Date.now() + 60 * 60 * 1000 });
+
+    // Stored before the email goes out — a token the user has but we do not is
+    // an unredeemable link. Deliberately allowed to throw: pretending a reset
+    // was sent when it cannot be redeemed is worse than a visible failure.
+    await sb('operator_users').update({
+      reset_token_hash: hashResetToken(token),
+      reset_token_expires: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+    }).eq('id', user.id).run();
+
     await sendPasswordResetEmail({ email: user.email, resetToken: token });
     return success(res, { message: 'If an account exists, a reset link has been sent.' });
   } catch (err) { next(err); }
@@ -120,11 +163,29 @@ async function resetPassword(req, res, next) {
     const { token, newPassword } = req.body;
     if (!token || !newPassword) return error(res, 'Token and new password are required.', 400);
     if (newPassword.length < 8) return error(res, 'Password must be at least 8 characters.', 400);
-    const entry = resetTokens.get(token);
-    if (!entry || Date.now() > entry.expires) return error(res, 'Invalid or expired reset token.', 400);
+    const rows = await sb('operator_users')
+      .select('id,reset_token_expires')
+      .eq('reset_token_hash', hashResetToken(token))
+      .run();
+
+    // Same message whether the token is unknown, already used or expired — the
+    // distinction is only useful to someone guessing tokens.
+    if (!rows || !rows.length) return error(res, 'Invalid or expired reset token.', 400);
+
+    const user = rows[0];
+    if (!user.reset_token_expires || new Date(user.reset_token_expires).getTime() < Date.now()) {
+      return error(res, 'Invalid or expired reset token.', 400);
+    }
+
     const hash = await bcrypt.hash(newPassword, 12);
-    await sb('operator_users').update({ password_hash: hash }).eq('id', entry.userId).run();
-    resetTokens.delete(token);
+
+    // Password and token are cleared together, so the link is single-use.
+    await sb('operator_users').update({
+      password_hash: hash,
+      reset_token_hash: null,
+      reset_token_expires: null,
+    }).eq('id', user.id).run();
+
     return success(res, { message: 'Password reset successfully.' });
   } catch (err) { next(err); }
 }

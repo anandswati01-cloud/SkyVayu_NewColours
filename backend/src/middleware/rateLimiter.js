@@ -27,4 +27,20 @@ const authLimiter = rateLimit({
   message: { error: 'Too many authentication attempts. Please try again in 15 minutes.' },
 });
 
-module.exports = { apiLimiter, authLimiter };
+// Razorpay webhook deliveries.
+//
+// These must not share the customer budget: a single busy minute can produce
+// payment.captured, order.paid and refund events together, and every failed
+// delivery is retried. Throttling them means dropping a confirmation for a
+// booking that has already been paid for. Still bounded — the endpoint verifies
+// a signature before doing any work, so an unsigned flood is cheap to reject.
+const webhookLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipInDev,
+  message: { error: 'Too many webhook deliveries.' },
+});
+
+module.exports = { apiLimiter, authLimiter, webhookLimiter };

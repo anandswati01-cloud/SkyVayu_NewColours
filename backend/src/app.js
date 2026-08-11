@@ -5,10 +5,11 @@ const morgan = require('morgan');
 const compression = require('compression');
 
 const { ALLOWED_ORIGINS, NODE_ENV, IS_PRODUCTION, TRUST_PROXY } = require('./config/env');
-const { apiLimiter } = require('./middleware/rateLimiter');
+const { apiLimiter, webhookLimiter } = require('./middleware/rateLimiter');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 // Routes
+const paymentController = require('./controllers/paymentController');
 const authRoutes = require('./routes/authRoutes');
 const queryRoutes = require('./routes/queryRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
@@ -85,6 +86,21 @@ app.use(cors({
     'apikey'
   ]
 }));
+
+// -----------------------------------------------------------------------------
+// Razorpay webhook
+// -----------------------------------------------------------------------------
+// Registered here, ahead of express.json(), on purpose. The webhook signature is
+// an HMAC over the exact bytes Razorpay sent; parsing the JSON and stringifying
+// it again produces different bytes (key order, whitespace) and the signature
+// would never verify. It also sits ahead of the general rate limiter, because a
+// throttled delivery is a paid-for booking left unconfirmed.
+app.post(
+  '/api/payments/webhook',
+  webhookLimiter,
+  express.raw({ type: '*/*', limit: '256kb' }),
+  paymentController.webhook,
+);
 
 // -----------------------------------------------------------------------------
 // Body Parser

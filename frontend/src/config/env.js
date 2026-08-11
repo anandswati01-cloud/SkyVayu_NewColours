@@ -27,6 +27,15 @@ const rawApiUrl = import.meta.env.VITE_API_URL
 const rawSupabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const rawSupabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
+// Invoice identity. Public by definition — a GSTIN and registered address are
+// printed on every invoice. Optional: each line is omitted from the invoice when
+// unset, so the document stays correct before the entity is registered rather
+// than printing an empty label.
+const rawCompanyName = import.meta.env.VITE_COMPANY_LEGAL_NAME
+const rawCompanyAddress = import.meta.env.VITE_COMPANY_ADDRESS
+const rawCompanyGstin = import.meta.env.VITE_COMPANY_GSTIN
+const rawCompanyState = import.meta.env.VITE_COMPANY_STATE
+
 // A service role key bypasses row level security. In a browser bundle that is a
 // full database compromise, so refuse to run rather than ship it.
 if (import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY) {
@@ -59,6 +68,12 @@ export const config = Object.freeze({
 
   SUPABASE_URL: stripSlash(required('VITE_SUPABASE_URL', rawSupabaseUrl)),
   SUPABASE_ANON_KEY: required('VITE_SUPABASE_ANON_KEY', rawSupabaseAnonKey),
+
+  /** Printed on tax invoices. Empty string means "leave the line off". */
+  COMPANY_LEGAL_NAME: (rawCompanyName || '').trim(),
+  COMPANY_ADDRESS: (rawCompanyAddress || '').trim(),
+  COMPANY_GSTIN: (rawCompanyGstin || '').trim(),
+  COMPANY_STATE: (rawCompanyState || '').trim(),
 })
 
 if (missing.length > 0) {

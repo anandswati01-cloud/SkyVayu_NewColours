@@ -106,9 +106,21 @@ async function adminRequest(method, path, body) {
 }
 
 export const adminApi = {
+  // Confirms the stored token belongs to an admin. The server re-reads
+  // profiles.is_admin on every admin request, so a 200 here is the real answer —
+  // the login screen used to ask the database directly from the browser, which
+  // row level security correctly refuses to answer.
+  me: () => adminRequest('GET', '/api/admin/me'),
   list: (resource) => adminRequest('GET', `/api/admin/${resource}`),
   update: (resource, id, body) => adminRequest('PATCH', `/api/admin/${resource}/${id}`, body),
   remove: (resource, id) => adminRequest('DELETE', `/api/admin/${resource}/${id}`),
+
+  // Payment operations. They live on /api/payments rather than /api/admin, but
+  // are behind the same server-side admin check — so they go out with the admin
+  // token, not whatever getToken() happens to find first.
+  refund: (body) => adminRequest('POST', '/api/payments/refund', body),
+  reconcile: (bookingId) => adminRequest('POST', `/api/payments/reconcile/${bookingId}`),
+  dismiss: (bookingId) => adminRequest('POST', `/api/payments/dismiss/${bookingId}`),
 }
 
 // Payments — the amount is never sent from here; the server prices the quote.

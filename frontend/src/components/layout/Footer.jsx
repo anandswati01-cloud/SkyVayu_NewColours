@@ -50,8 +50,11 @@ export default function Footer() {
         <div>
           <div style={s.heading}>Support</div>
           <Link to="/help" style={s.link}>Help Center</Link>
+          <Link to="/contact" style={s.link}>Contact Us</Link>
           <Link to="/privacy" style={s.link}>Privacy Policy</Link>
           <Link to="/terms" style={s.link}>Terms of Service</Link>
+          {/* Razorpay's activation review looks for this at its own URL. */}
+          <Link to="/refunds" style={s.link}>Refund & Cancellation</Link>
           <Link to="/cookies" style={s.link}>Cookie Policy</Link>
         </div>
 

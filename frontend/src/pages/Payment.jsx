@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { paymentApi } from '../services/api'
 import { showToast } from '../components/ui/Toast'
 import useAuthStore from '../store/authStore'
@@ -108,11 +108,16 @@ export default function Payment() {
             })
             finish(verified.data)
           } catch (err) {
-            // Money may have left the customer's account — never imply it did not.
+            // Money may have left the customer's account — never imply it did
+            // not. The server-side webhook confirms the booking independently of
+            // this callback, so the honest message is "it is in hand", not
+            // "it failed": telling them to pay again would double-charge them.
             showToast(
-              err.message || `Payment received but confirmation failed. Quote your booking ref ${order.data.bookingRef} to support.`,
-              'error',
+              `Payment received. Confirming your booking is taking longer than usual — ` +
+              `you will get an email shortly. Do not pay again. Your reference is ${order.data.bookingRef}.`,
+              'info',
             )
+            console.error('[payment] verify call failed; relying on webhook', err)
             setLoading(false)
           }
         },
@@ -139,6 +144,7 @@ export default function Payment() {
   const inputStyle = { background: 'var(--white-10)', border: '1px solid var(--white-10)', borderRadius: 2, padding: '12px 16px', color: 'var(--white)', fontFamily: 'var(--font-body)', fontSize: 15, outline: 'none', width: '100%' }
   const labelStyle = { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--white-60)', marginBottom: 8, display: 'block' }
   const errStyle = { color: '#e05f5f', fontSize: 12, marginTop: 4 }
+  const policyLink = { color: 'var(--white-60)', textDecoration: 'underline' }
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--navy)', paddingTop: 72, display: 'flex', justifyContent: 'center', padding: '100px 48px 48px' }}>
@@ -174,8 +180,13 @@ export default function Payment() {
             style={{ display: 'flex', alignItems: 'center', gap: 12, background: loading ? 'rgba(251,191,36,0.5)' : 'var(--gold)', color: 'var(--navy)', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '16px 32px', borderRadius: 2, cursor: loading ? 'not-allowed' : 'pointer', border: 'none', fontWeight: 500, width: '100%', justifyContent: 'center' }}>
             {loading ? 'Opening payment…' : `Confirm & Pay ${fmt(price)}`}
           </button>
-          <p style={{ fontSize: 12, color: 'var(--white-30)', marginTop: 12, textAlign: 'center' }}>
-            By confirming, you agree to our Terms of Service and Privacy Policy.
+          {/* Linked, not just named. The customer is one click from paying, so
+              the cancellation terms have to be reachable from here — and
+              Razorpay's review checks for exactly this on a checkout page. */}
+          <p style={{ fontSize: 12, color: 'var(--white-30)', marginTop: 12, textAlign: 'center', lineHeight: 1.7 }}>
+            By confirming, you agree to our <Link to="/terms" style={policyLink}>Terms of Service</Link>,{' '}
+            <Link to="/privacy" style={policyLink}>Privacy Policy</Link> and{' '}
+            <Link to="/refunds" style={policyLink}>Refund &amp; Cancellation Policy</Link>.
           </p>
         </div>
 
