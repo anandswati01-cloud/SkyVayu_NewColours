@@ -1,3 +1,11 @@
+# Render Blueprint.
+#
+# Lives at the repository root because that is the only place Render's Blueprint
+# feature looks for it — the file used to sit in backend/, where it was never
+# found. `rootDir` below is what points the build back at the backend folder, so
+# the frontend/ directory in this repo is cloned but otherwise ignored here; it
+# deploys separately on Vercel.
+
 services:
   - type: web
     name: skyvayu-backend
