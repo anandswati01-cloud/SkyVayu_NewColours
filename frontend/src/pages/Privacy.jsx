@@ -23,9 +23,10 @@ export default function Privacy() {
     >
       <h2 style={doc.h2}>1. Who we are</h2>
       <p style={doc.p}>
-        SkyVayu is operated by <strong style={doc.strong}>[COMPANY LEGAL NAME]</strong>, registered at{' '}
-        <strong style={doc.strong}>[REGISTERED ADDRESS]</strong>. For anything in this policy, write to{' '}
-        <strong style={doc.strong}>[PRIVACY CONTACT EMAIL]</strong>.
+        SkyVayu is operated by <strong style={doc.strong}>SPANPRO Project Management Private Limited</strong>,
+        registered at <strong style={doc.strong}>Ground Floor, A-31, Sector 4, Noida, Gautam Buddha Nagar,
+        Uttar Pradesh 201301, India</strong>. For anything in this policy, write to{' '}
+        <strong style={doc.strong}>privacy@skyvayu.com</strong>.
       </p>
 
       <h2 style={doc.h2}>2. What we collect</h2>
@@ -78,7 +79,7 @@ export default function Privacy() {
       <p style={doc.p}>
         Our database and hosting run on managed cloud infrastructure. Some providers process data outside India;
         where that happens we rely on their contractual data-protection commitments. Region details are available
-        on request from <strong style={doc.strong}>[PRIVACY CONTACT EMAIL]</strong>.
+        on request from <strong style={doc.strong}>privacy@skyvayu.com</strong>.
       </p>
 
       <h2 style={doc.h2}>7. How long we keep it</h2>
@@ -92,7 +93,7 @@ export default function Privacy() {
       <p style={doc.p}>
         You may ask us to access, correct or delete your personal data, withdraw consent for optional processing,
         or nominate someone to exercise these rights on your behalf. Write to{' '}
-        <strong style={doc.strong}>[PRIVACY CONTACT EMAIL]</strong> and we will respond within the period required
+        <strong style={doc.strong}>privacy@skyvayu.com</strong> and we will respond within the period required
         by law. Deletion cannot extend to records we must retain for tax or aviation compliance.
       </p>
 

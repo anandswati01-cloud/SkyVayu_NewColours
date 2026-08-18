@@ -29,9 +29,11 @@ export default function Terms() {
 
       <h2 style={doc.h2}>1. Who these terms are with</h2>
       <p style={doc.p}>
-        This platform is operated by <strong style={doc.strong}>[COMPANY LEGAL NAME]</strong> ("SkyVayu", "we"),
-        registered at <strong style={doc.strong}>[REGISTERED ADDRESS]</strong>. By using the platform you accept
-        these terms. If you do not accept them, please do not use the service.
+        This platform is operated by <strong style={doc.strong}>SPANPRO Project Management Private Limited</strong>{' '}
+        ("SkyVayu", "we"), registered at <strong style={doc.strong}>Ground Floor, A-31, Sector 4, Noida,
+        Gautam Buddha Nagar, Uttar Pradesh 201301, India</strong>. GSTIN{' '}
+        <strong style={doc.strong}>09ABHCS1988C1Z2</strong>. By using the platform you accept these terms.
+        If you do not accept them, please do not use the service.
       </p>
 
       <h2 style={doc.h2}>2. What SkyVayu does</h2>
@@ -119,8 +121,8 @@ export default function Terms() {
 
       <h2 style={doc.h2}>12. Governing law</h2>
       <p style={doc.p}>
-        These terms are governed by the laws of India. Courts at <strong style={doc.strong}>[CITY]</strong> have
-        exclusive jurisdiction.
+        These terms are governed by the laws of India. Courts at{' '}
+        <strong style={doc.strong}>Gautam Buddha Nagar, Uttar Pradesh</strong> have exclusive jurisdiction.
       </p>
 
       <h2 style={doc.h2}>13. Changes to these terms</h2>

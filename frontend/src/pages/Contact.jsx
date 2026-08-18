@@ -91,13 +91,13 @@ export default function Contact() {
 
       <h2 style={doc.h2}>Registered office</h2>
       <p style={doc.p}>
-        <strong style={doc.strong}>[COMPANY LEGAL NAME]</strong><br />
-        [REGISTERED ADDRESS LINE 1]<br />
-        [CITY, STATE — PIN]<br />
+        <strong style={doc.strong}>SPANPRO Project Management Private Limited</strong><br />
+        Ground Floor, A-31, Sector 4<br />
+        Noida, Gautam Buddha Nagar, Uttar Pradesh — 201301<br />
         India
       </p>
       <p style={doc.p}>
-        GSTIN: <strong style={doc.strong}>[GSTIN]</strong> · CIN: <strong style={doc.strong}>[CIN]</strong>
+        GSTIN: <strong style={doc.strong}>09ABHCS1988C1Z2</strong> · CIN: <strong style={doc.strong}>[CIN]</strong>
       </p>
       <p style={doc.p}>
         Operations desks: Mumbai · Delhi · Dubai. Office visits are by appointment only — please write first.
