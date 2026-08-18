@@ -12,7 +12,15 @@ services:
     runtime: node
     plan: free
     rootDir: backend
-    buildCommand: npm ci --omit=dev
+    # `npm install`, not `npm ci`. ci refuses to run at all if it cannot see a
+    # package-lock.json — which is exactly how the first deploy failed, with
+    # "can only install with an existing package-lock.json" even though the file
+    # is committed. install builds the tree either way, so a lockfile that the
+    # host resolves differently degrades to a slower install instead of a failed
+    # deploy. The Node version is pinned in backend/.node-version for the same
+    # reason: engines said ">=18", so Render picked 26.x, whose npm behaves
+    # differently from the one this lockfile was written by.
+    buildCommand: npm install --omit=dev
     startCommand: node src/server.js
     healthCheckPath: /health
     envVars:
