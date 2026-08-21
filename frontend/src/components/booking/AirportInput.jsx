@@ -47,7 +47,10 @@ export default function AirportInput({ id, placeholder, value, onChange, tabInde
   }
 
   return (
-    <div ref={wrapRef} style={{ position: 'relative' }}>
+    // Styling lives in Home.css rather than inline, so the input inherits the
+    // borderless cell it sits in. Inline styles would win over that and put a
+    // bordered box back inside the booking strip.
+    <div ref={wrapRef} className="ai" >
       <input
         id={id}
         tabIndex={tabIndex}
@@ -58,20 +61,20 @@ export default function AirportInput({ id, placeholder, value, onChange, tabInde
         onFocus={() => query.length >= 2 && setOpen(results.length > 0)}
         placeholder={placeholder}
         autoComplete="off"
-        style={{ background: 'var(--white-10)', border: '1px solid var(--white-10)', borderRadius: 2, padding: '12px 16px', color: 'var(--white)', fontFamily: 'var(--font-body)', fontSize: 15, outline: 'none', width: '100%', transition: 'border-color 0.2s' }}
-        onFocusCapture={e => e.target.style.borderColor = 'var(--gold)'}
-        onBlur={e => { e.target.style.borderColor = 'var(--white-10)'; setTimeout(() => setOpen(false), 150) }}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
       />
       {open && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: '#162040', border: '1px solid var(--white-10)', borderRadius: 4, zIndex: 999, maxHeight: 280, overflowY: 'auto' }}>
+        <div className="ai__list">
           {results.map((a, i) => (
-            <div key={a.iata} onMouseDown={() => select(a)}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--white-10)', background: i === activeIdx ? 'rgba(251,191,36,0.1)' : 'transparent', transition: 'background 0.15s' }}>
-              <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--white)' }}>
+            <div
+              key={a.iata}
+              className={`ai__opt${i === activeIdx ? ' on' : ''}`}
+              onMouseDown={() => select(a)}>
+              <div className="ai__city">
                 {a.city}
-                <div style={{ fontSize: 11, color: 'var(--white-60)', marginTop: 2 }}>{a.name}</div>
+                <div className="ai__name">{a.name}</div>
               </div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--gold)', letterSpacing: '1.5px' }}>{a.iata}</div>
+              <div className="ai__iata">{a.iata}</div>
             </div>
           ))}
         </div>

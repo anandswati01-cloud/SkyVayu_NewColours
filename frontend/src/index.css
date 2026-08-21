@@ -1,8 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&family=Spectral:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Figtree:wght@300;400;500;600&display=swap');
 
 @import "tailwindcss";
 
 :root {
+  /* ── Original palette ───────────────────────────────────────────────────────
+     Still used by the legal pages, the payment flow, the operator portal and
+     the admin dashboard. Left untouched on purpose — the redesign below is
+     additive, so a change to the marketing pages cannot alter a page where
+     money or compliance text is displayed. */
   --navy: #0c1324;
   --navy-mid: #0f1a30;
   --navy-light: #162040;
@@ -16,6 +21,28 @@
   --font-display: 'Cormorant Garamond', Georgia, serif;
   --font-mono: 'DM Mono', monospace;
   --font-body: 'DM Sans', sans-serif;
+
+  /* ── v1 marketing palette ───────────────────────────────────────────────────
+     Warm near-black with a brass accent, in oklch so the tints stay on one
+     hue as they lighten. Drives the navigation, footer and home page. */
+  --bg:       oklch(9% 0.008 55);
+  --s1:       oklch(13% 0.007 55);
+  --s2:       oklch(17% 0.006 55);
+  --s3:       oklch(22% 0.005 55);
+  --brass:    oklch(72% 0.08 75);
+  --brass-lt: oklch(80% 0.068 75);
+  --brass-dim:oklch(62% 0.055 75);
+  --brass-bd: oklch(35% 0.03 75);
+  --bd:       oklch(24% 0.007 55);
+  --t1:       oklch(97% 0.005 60);
+  --t2:       oklch(70% 0.008 60);
+  --tm:       oklch(52% 0.007 60);
+  --font-d:   'Spectral', Georgia, serif;
+  --font-b:   'Figtree', 'Helvetica Neue', sans-serif;
+  --nav-h:    68px;
+  --mw:       1360px;
+  --ease:     cubic-bezier(0.25,0.1,0.25,1);
+  --eout:     cubic-bezier(0,0,0.2,1);
 }
 
 *, *::before, *::after {
