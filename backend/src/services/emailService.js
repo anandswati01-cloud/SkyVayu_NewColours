@@ -67,6 +67,42 @@ async function sendBookingConfirmationEmail({ clientEmail, clientName, ref, rout
 }
 
 /**
+ * Sent to the charter desk the moment a booking is paid for.
+ *
+ * Nothing else told anyone on the SkyVayu side that money had arrived — the
+ * confirmation went to the customer alone, so a booking placed overnight sat
+ * unseen until somebody happened to open the dashboard. Includes how it was
+ * confirmed, because a booking confirmed by the webhook means the customer
+ * never saw the success screen and may not realise it went through.
+ */
+async function sendBookingAlertEmail({ ref, clientName, clientEmail, clientPhone, route, flightDate, aircraft, operatorName, totalAmount, paymentId, paymentMethod, source }) {
+  await sendEmail({
+    to: ADMIN_EMAIL,
+    subject: `Booking Confirmed — ${ref} · ₹${Number(totalAmount || 0).toLocaleString('en-IN')}`,
+    html: `
+      <h2>Booking Confirmed</h2>
+      <p><strong>${route}</strong> on ${flightDate} — ₹${Number(totalAmount || 0).toLocaleString('en-IN')} received.</p>
+      <table>
+        <tr><td><strong>Booking Ref:</strong></td><td>${ref}</td></tr>
+        <tr><td><strong>Client:</strong></td><td>${clientName}</td></tr>
+        <tr><td><strong>Email:</strong></td><td>${clientEmail}</td></tr>
+        <tr><td><strong>Phone:</strong></td><td>${clientPhone || '—'}</td></tr>
+        <tr><td><strong>Route:</strong></td><td>${route}</td></tr>
+        <tr><td><strong>Date:</strong></td><td>${flightDate}</td></tr>
+        <tr><td><strong>Aircraft:</strong></td><td>${aircraft}</td></tr>
+        <tr><td><strong>Operator:</strong></td><td>${operatorName}</td></tr>
+        <tr><td><strong>Amount:</strong></td><td>₹${Number(totalAmount || 0).toLocaleString('en-IN')}</td></tr>
+        <tr><td><strong>Payment:</strong></td><td>${paymentId || '—'}${paymentMethod ? ` (${paymentMethod})` : ''}</td></tr>
+        <tr><td><strong>Confirmed via:</strong></td><td>${source}</td></tr>
+      </table>
+      ${source === 'webhook'
+        ? '<p><em>Confirmed by the payment webhook — the customer likely closed the tab before the confirmation screen, so they may not know the booking went through. Worth a call.</em></p>'
+        : ''}
+    `,
+  });
+}
+
+/**
  * Sent when a refund is issued. Deliberately states the settlement window —
  * the money leaves Razorpay immediately but takes days to appear on the card
  * or account, and "where is my refund" is otherwise the next support ticket.
@@ -137,6 +173,7 @@ module.exports = {
   sendEmail,
   sendNewQueryEmail,
   sendBookingConfirmationEmail,
+  sendBookingAlertEmail,
   sendRefundEmail,
   sendQuoteSubmittedEmail,
   sendDocExpiryReminderEmail,

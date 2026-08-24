@@ -4,7 +4,7 @@ const { sb } = require('../config/supabase');
 const { success, error } = require('../utils/response');
 const { generateBookingRef } = require('../helpers/bookingRef');
 const { ensureProfile } = require('../helpers/profile');
-const { sendBookingConfirmationEmail, sendRefundEmail } = require('../services/emailService');
+const { sendBookingConfirmationEmail, sendBookingAlertEmail, sendRefundEmail } = require('../services/emailService');
 const razorpay = require('../services/razorpayService');
 
 // Every payment log line is prefixed and tagged with a correlation id (booking
@@ -149,6 +149,23 @@ async function confirmBooking(booking, payment, { tag, source }) {
     operatorName: booking.operator_name,
     totalAmount: booking.total_amount || 0,
   }).catch((e) => plog.warn(tag, 'confirmation email failed', e.message));
+
+  // The charter desk needs to know too. Fire-and-forget like the customer's
+  // copy — a booking is confirmed whether or not the notification lands.
+  sendBookingAlertEmail({
+    ref: booking.ref,
+    clientName: booking.client_name,
+    clientEmail: booking.client_email,
+    clientPhone: booking.client_phone,
+    route: booking.route || '—',
+    flightDate: booking.flight_date || '—',
+    aircraft: booking.aircraft || '—',
+    operatorName: booking.operator_name,
+    totalAmount: booking.total_amount || 0,
+    paymentId: payment.id,
+    paymentMethod: payment.method || null,
+    source,
+  }).catch((e) => plog.warn(tag, 'admin alert email failed', e.message));
 
   return confirmed;
 }
