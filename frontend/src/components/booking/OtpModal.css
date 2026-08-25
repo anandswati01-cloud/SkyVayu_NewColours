@@ -1,0 +1,90 @@
+/* Phone verification dialog. Uses the v1 brass tokens because it is opened from
+   the home page booking form, which runs on that palette. Class names are
+   prefixed rather than scoped under .v1 — the dialog renders at the end of the
+   page, outside the .v1 wrapper. */
+
+.otp__backdrop {
+  position: fixed; inset: 0; z-index: 9998;
+  background: oklch(5% 0.006 55 / .8); backdrop-filter: blur(5px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; overflow-y: auto;
+}
+
+.otp {
+  position: relative; width: 100%; max-width: 400px; margin: auto;
+  background: var(--s1); border: 1px solid var(--bd);
+  padding: 38px 34px 32px;
+  font-family: var(--font-b); font-weight: 300; color: var(--t1);
+}
+
+.otp__x {
+  position: absolute; top: 14px; right: 14px;
+  background: none; border: none; color: var(--tm);
+  font-size: .95rem; line-height: 1; cursor: pointer; padding: 4px;
+  transition: color .2s;
+}
+.otp__x:hover { color: var(--t1); }
+
+.otp__eyebrow {
+  font-size: .56rem; font-weight: 500; letter-spacing: .25em; text-transform: uppercase;
+  color: var(--brass); margin-bottom: 14px;
+}
+.otp__title { font-family: var(--font-d); font-size: 1.6rem; font-weight: 300; line-height: 1.15; margin-bottom: 10px; }
+.otp__desc { font-size: .82rem; color: var(--t2); line-height: 1.75; margin-bottom: 26px; }
+.otp__desc strong { color: var(--t1); font-weight: 400; }
+
+.otp__label {
+  display: block; font-size: .56rem; font-weight: 500; letter-spacing: .25em;
+  text-transform: uppercase; color: var(--brass-dim); margin-bottom: 9px;
+}
+
+.otp__phone { display: flex; align-items: stretch; border: 1px solid var(--bd); transition: border-color .2s; }
+.otp__phone:focus-within { border-color: var(--brass-bd); }
+.otp__cc {
+  display: flex; align-items: center; padding: 0 14px;
+  font-size: .85rem; color: var(--tm); border-right: 1px solid var(--bd); flex-shrink: 0;
+}
+.otp__phone input {
+  flex: 1; min-width: 0; background: none; border: none; outline: none;
+  padding: 14px 16px; font-family: var(--font-b); font-size: .95rem; font-weight: 300; color: var(--t1);
+}
+.otp__phone input::placeholder { color: var(--tm); }
+
+.otp__hint { font-size: .68rem; color: var(--tm); line-height: 1.6; margin-top: 10px; }
+
+/* Wide tracking so six characters read as six separate digits. */
+.otp__code {
+  width: 100%; background: none; border: 1px solid var(--bd); outline: none;
+  padding: 15px 16px; font-family: var(--font-b); font-size: 1.4rem; font-weight: 300;
+  color: var(--t1); letter-spacing: .55em; text-align: center;
+  font-variant-numeric: tabular-nums; transition: border-color .2s;
+}
+.otp__code:focus { border-color: var(--brass-bd); }
+.otp__code::placeholder { color: var(--tm); letter-spacing: .4em; }
+
+.otp__err {
+  font-size: .72rem; color: oklch(68% 0.16 25); line-height: 1.6;
+  border-left: 2px solid oklch(55% 0.16 25); padding-left: 11px; margin-top: 16px;
+}
+
+.otp__btn {
+  width: 100%; margin-top: 24px; padding: 15px;
+  font-family: var(--font-b); font-size: .64rem; font-weight: 500; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--bg); background: var(--brass);
+  border: none; cursor: pointer; transition: background .2s;
+}
+.otp__btn:hover:not(:disabled) { background: var(--brass-lt); }
+.otp__btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.otp__foot { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 20px; }
+.otp__link {
+  background: none; border: none; padding: 0; cursor: pointer;
+  font-family: var(--font-b); font-size: .68rem; color: var(--t2);
+  text-decoration: underline; text-underline-offset: 3px; transition: color .2s;
+}
+.otp__link:hover:not(:disabled) { color: var(--brass); }
+.otp__link:disabled { color: var(--tm); cursor: not-allowed; text-decoration: none; }
+
+@media (max-width: 480px) {
+  .otp { padding: 32px 22px 26px; }
+}

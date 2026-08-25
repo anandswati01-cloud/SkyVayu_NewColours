@@ -79,6 +79,16 @@ export const quoteApi = {
 }
 
 // Fleet
+/* Phone verification. None of these need a session — a visitor verifies a
+ * number before they have an account. `verify` returns a signed phoneToken that
+ * /api/queries reads the number out of, so the token is the valuable part of
+ * the response, not the boolean. */
+export const otpApi = {
+  send: (phone) => api.post('/api/otp/send', { phone }),
+  verify: (phone, code) => api.post('/api/otp/verify', { phone, code }),
+  status: (token) => api.get(`/api/otp/status?token=${encodeURIComponent(token)}`),
+}
+
 export const fleetApi = {
   list: () => api.get('/api/fleet'),
   get: (id) => api.get(`/api/fleet/${id}`),

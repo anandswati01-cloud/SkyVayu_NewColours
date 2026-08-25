@@ -19,6 +19,7 @@ const feedbackRoutes = require('./routes/feedbackRoutes');
 const operatorRoutes = require('./routes/operatorRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const otpRoutes = require('./routes/otpRoutes');
 
 const app = express();
 
@@ -157,6 +158,7 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/operators', operatorRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/otp', otpRoutes);
 
 // -----------------------------------------------------------------------------
 // 404

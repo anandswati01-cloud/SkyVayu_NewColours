@@ -36,6 +36,16 @@ const rawCompanyAddress = import.meta.env.VITE_COMPANY_ADDRESS
 const rawCompanyGstin = import.meta.env.VITE_COMPANY_GSTIN
 const rawCompanyState = import.meta.env.VITE_COMPANY_STATE
 
+// Phone verification gate. ON unless explicitly switched off.
+//
+// This exists because the gate and its SMS provider go live on different days.
+// Indian transactional SMS needs TRAI DLT approval, which takes days and cannot
+// be rushed; shipping the gate before the provider works would leave every
+// visitor stuck on the verification screen with no way to request a quote. Set
+// this to "false" to deploy the rest of the site while DLT is pending, then
+// remove it once SMS is delivering.
+const rawRequirePhone = import.meta.env.VITE_REQUIRE_PHONE_VERIFICATION
+
 // A service role key bypasses row level security. In a browser bundle that is a
 // full database compromise, so refuse to run rather than ship it.
 if (import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY) {
@@ -68,6 +78,9 @@ export const config = Object.freeze({
 
   SUPABASE_URL: stripSlash(required('VITE_SUPABASE_URL', rawSupabaseUrl)),
   SUPABASE_ANON_KEY: required('VITE_SUPABASE_ANON_KEY', rawSupabaseAnonKey),
+
+  /** Gate the charter form behind SMS verification. Only "false" turns it off. */
+  REQUIRE_PHONE_VERIFICATION: String(rawRequirePhone ?? 'true').trim().toLowerCase() !== 'false',
 
   /** Printed on tax invoices. Empty string means "leave the line off". */
   COMPANY_LEGAL_NAME: (rawCompanyName || '').trim(),

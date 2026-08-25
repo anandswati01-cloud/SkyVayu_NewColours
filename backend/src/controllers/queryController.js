@@ -3,12 +3,18 @@ const { success, error } = require('../utils/response');
 const { sendNewQueryEmail } = require('../services/emailService');
 const { MEMBERSHIP_GATE_ENABLED } = require('../config/env');
 const { ensureProfile } = require('../helpers/profile');
+const { readPhoneToken } = require('./otpController');
 
 // POST /api/queries
 async function createQuery(req, res, next) {
   try {
-    const { tripType, departure, destination, flightDate, flightTime, returnDate, returnTime, passengers, clientPhone, sectors, medivac, pets, infants, vip, aircraftCategory } = req.body;
+    const { tripType, departure, destination, flightDate, flightTime, returnDate, returnTime, passengers, clientPhone, phoneToken, sectors, medivac, pets, infants, vip, aircraftCategory } = req.body;
     const userId = await ensureProfile(req.user);
+
+    // The number is read out of the signed token, never out of the body, when
+    // one is present. Verifying a number and then letting the same request
+    // submit a different one would make the whole OTP step decorative.
+    const verifiedPhone = readPhoneToken(phoneToken);
 
     // Check user access gate (off by default — see MEMBERSHIP_GATE_ENABLED)
     if (userId && MEMBERSHIP_GATE_ENABLED) {
@@ -26,7 +32,10 @@ async function createQuery(req, res, next) {
       return_date: returnDate || null,
       return_time: returnTime || null,
       passengers: parseInt(passengers) || 1,
-      client_phone: clientPhone || null,
+      client_phone: verifiedPhone || clientPhone || null,
+      // Kept per-row so the desk can tell at a glance which requests carry a
+      // number somebody actually answered on. Older rows stay false.
+      phone_verified: !!verifiedPhone,
       sectors: sectors || null,
       medivac: !!medivac,
       pets: !!pets,

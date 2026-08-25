@@ -156,6 +156,55 @@ const config = {
   // an unverified webhook would let anyone confirm a booking by POSTing to it.
   RAZORPAY_WEBHOOK_SECRET: str('RAZORPAY_WEBHOOK_SECRET', { fallback: '' }),
 
+  // ── SMS / phone verification ───────────────────────────────────────────────
+  // 'msg91' | 'twilio' | 'console'. In development the default prints the code
+  // to the server log so the flow can be exercised without an SMS account; in
+  // production 'console' is refused at send time rather than faking delivery.
+  SMS_PROVIDER: str('SMS_PROVIDER', { fallback: IS_PRODUCTION ? 'generic' : 'console' }),
+
+  // Generic gateway. The URL carries the whole request; see smsService for the
+  // placeholder list. SMS_TEMPLATE must match the DLT-approved wording exactly,
+  // with {otp} where the registered template has {#var#}.
+  SMS_GATEWAY_URL: str('SMS_GATEWAY_URL', { fallback: '' }),
+  SMS_GATEWAY_METHOD: str('SMS_GATEWAY_METHOD', { fallback: 'GET' }),
+  // Form-encoded POST body, for gateways that do not take query parameters.
+  SMS_GATEWAY_BODY: str('SMS_GATEWAY_BODY', { fallback: '' }),
+  // Gateway account credentials. Separate from the URL/body templates so they
+  // can be rotated on their own and never end up pasted into a config example.
+  SMS_GATEWAY_USER: str('SMS_GATEWAY_USER', { fallback: '' }),
+  SMS_GATEWAY_PASS: str('SMS_GATEWAY_PASS', { fallback: '' }),
+  SMS_TEMPLATE: str('SMS_TEMPLATE', { fallback: '' }),
+
+  // TRAI DLT registration ids. The template id is the approved message; the
+  // principal entity id is the registered business behind it.
+  DLT_TE_ID: str('DLT_TE_ID', { fallback: '' }),
+  DLT_PE_ID: str('DLT_PE_ID', { fallback: '' }),
+
+  // MSG91. Indian transactional SMS needs a TRAI DLT-registered template —
+  // MSG91_TEMPLATE_ID is that template's id, and the variable inside it must be
+  // named `otp` to match smsService.
+  MSG91_AUTH_KEY: str('MSG91_AUTH_KEY', { fallback: '' }),
+  MSG91_TEMPLATE_ID: str('MSG91_TEMPLATE_ID', { fallback: '' }),
+  MSG91_SENDER_ID: str('MSG91_SENDER_ID', { fallback: '' }),
+
+  // Twilio, for international numbers.
+  TWILIO_ACCOUNT_SID: str('TWILIO_ACCOUNT_SID', { fallback: '' }),
+  TWILIO_AUTH_TOKEN: str('TWILIO_AUTH_TOKEN', { fallback: '' }),
+  TWILIO_FROM_NUMBER: str('TWILIO_FROM_NUMBER', { fallback: '' }),
+
+  // OTP behaviour. Short life and a low attempt ceiling are what keep a
+  // six-digit code from being guessable.
+  OTP_TTL_MINUTES: int('OTP_TTL_MINUTES', 5),
+  OTP_MAX_ATTEMPTS: int('OTP_MAX_ATTEMPTS', 5),
+  OTP_RESEND_COOLDOWN_SECONDS: int('OTP_RESEND_COOLDOWN_SECONDS', 60),
+  OTP_MAX_PER_PHONE_PER_DAY: int('OTP_MAX_PER_PHONE_PER_DAY', 10),
+  OTP_MAX_PER_IP_PER_HOUR: int('OTP_MAX_PER_IP_PER_HOUR', 20),
+
+  // How long a completed verification counts for. The browser keeps the signed
+  // token, so a returning customer is not made to re-verify on every visit —
+  // the number is already known and proven.
+  PHONE_TOKEN_TTL_DAYS: int('PHONE_TOKEN_TTL_DAYS', 30),
+
   // ── CORS ───────────────────────────────────────────────────────────────────
   // CORS_ORIGIN is accepted as an alias so older .env files keep working.
   ALLOWED_ORIGINS: list('ALLOWED_ORIGINS', list('CORS_ORIGIN', IS_PRODUCTION ? [] : ['http://localhost:5173'])),
@@ -167,6 +216,43 @@ const config = {
 
 if (IS_PRODUCTION && config.ALLOWED_ORIGINS.length === 0) {
   problems.push('ALLOWED_ORIGINS is required in production (comma-separated list of frontend origins).');
+}
+
+if (!['generic', 'msg91', 'twilio', 'console'].includes(config.SMS_PROVIDER)) {
+  problems.push(`SMS_PROVIDER must be generic, msg91, twilio or console (received "${config.SMS_PROVIDER}").`);
+}
+
+// A template with no {otp} in it sends the approved wording with an empty slot
+// where the code should be — the SMS arrives, reads correctly, and is useless.
+if (config.SMS_PROVIDER === 'generic' && config.SMS_TEMPLATE && !config.SMS_TEMPLATE.includes('{otp}')) {
+  problems.push('SMS_TEMPLATE contains no {otp} placeholder, so the code would never appear in the message.');
+}
+
+// The charter form cannot be submitted without a working OTP, so a production
+// deploy whose provider is half-configured takes the whole funnel down — and it
+// does it silently, because the API boots fine and only fails once a customer
+// reaches the verification screen. Failing here instead means the deploy fails
+// and the previous, working release stays up.
+if (IS_PRODUCTION) {
+  const missingFor = {
+    generic: ['SMS_GATEWAY_URL', 'SMS_TEMPLATE'],
+    msg91: ['MSG91_AUTH_KEY', 'MSG91_TEMPLATE_ID'],
+    twilio: ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_FROM_NUMBER'],
+  }[config.SMS_PROVIDER] || [];
+
+  const absent = missingFor.filter((key) => !config[key]);
+  if (absent.length) {
+    problems.push(
+      `SMS_PROVIDER is "${config.SMS_PROVIDER}" but ${absent.join(', ')} ${absent.length === 1 ? 'is' : 'are'} not set — ` +
+      'no verification code could be delivered, and the charter form would be unusable.',
+    );
+  }
+}
+
+// Caught at boot rather than at the first customer's verification screen. A
+// production deploy set to 'console' would accept every send and deliver none.
+if (IS_PRODUCTION && config.SMS_PROVIDER === 'console') {
+  problems.push('SMS_PROVIDER cannot be "console" in production — no message is actually sent.');
 }
 
 if (config.SUPABASE_URL && !/^https?:\/\//.test(config.SUPABASE_URL)) {

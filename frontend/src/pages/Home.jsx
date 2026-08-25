@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import AirportInput from '../components/booking/AirportInput'
-import { queryApi, feedbackApi } from '../services/api'
+import OtpModal, { PHONE_TOKEN_KEY } from '../components/booking/OtpModal'
+import { queryApi, feedbackApi, otpApi } from '../services/api'
+import { config } from '../config/env'
 import { signInWithGoogle } from '../services/supabase'
 import useAuthStore from '../store/authStore'
 import { showToast } from '../components/ui/Toast'
@@ -22,6 +24,20 @@ const SPECIALS = [
   ['vip', 'VIP Passenger'],
   ['infants', 'Infants'],
 ]
+
+// Passenger stepper bounds. The backend accepts 1–100 (createQueryRules), so 20
+// is a product choice, not a technical limit — above it the request stops being
+// a charter quote and becomes a group booking the desk handles by hand.
+const PAX_MIN = 1
+const PAX_MAX = 20
+const PAX_DEFAULT = 2
+
+// A multi-sector request needs at least two legs to mean anything, so the form
+// opens with two and the remove button locks at that floor.
+const MIN_SECTORS = 2
+
+let sectorSeq = 0
+const newSector = () => ({ key: `s${++sectorSeq}`, from: '', to: '', dateTime: '', pax: PAX_DEFAULT })
 
 // Bundled rather than hotlinked, so the section does not depend on a third
 // party staying up — and so Vite fingerprints and caches them.
@@ -60,7 +76,17 @@ export default function Home() {
   const [returnDateTime, setReturnDateTime] = useState('')
   // No default. Passenger count decides which aircraft can even serve the
   // route, so it is worth an explicit choice rather than a silent "2".
-  const [pax, setPax] = useState('')
+  // Charter-v2 used a stepper here rather than a dropdown, and started at 2.
+  // A stepper always holds a valid number, so unlike the old "Select count"
+  // select this field can never be submitted empty and needs no validation.
+  const [pax, setPax] = useState(PAX_DEFAULT)
+
+  // Only used by the Multiple Sectors mode. Each row carries a stable `key` so
+  // that removing a middle sector does not re-bind the surviving rows' inputs to
+  // the wrong data — an array index as the React key would do exactly that.
+  const [sectors, setSectors] = useState(() => [newSector(), newSector()])
+
+  const [otpOpen, setOtpOpen] = useState(false)
   const [specials, setSpecials] = useState([])
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
@@ -120,19 +146,44 @@ export default function Home() {
     }
   }, [location.state])
 
+  const isMulti = tripType === 'Multiple Sectors'
+
   function toggleSpecial(key) {
     setSpecials((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]))
   }
 
   function validate() {
     const errs = {}
-    if (!departure.trim()) errs.departure = 'Please enter a departure city'
-    if (!destination.trim()) errs.destination = 'Please enter a destination city'
-    if (!dateTime) errs.dateTime = 'Please select a departure date & time'
-    if (!pax) errs.pax = 'Please select how many are travelling'
-    if (tripType === 'Round Trip' && !returnDateTime) errs.returnDateTime = 'Please select a return date & time'
+
+    if (isMulti) {
+      // The single From/To/Date row is not on screen in this mode, so validating
+      // it would block the form on fields the user cannot see or fill.
+      sectors.forEach((s, i) => {
+        if (!s.from.trim()) errs[`sec-${s.key}-from`] = `Sector ${i + 1}: enter a departure city`
+        if (!s.to.trim()) errs[`sec-${s.key}-to`] = `Sector ${i + 1}: enter a destination city`
+        if (!s.dateTime) errs[`sec-${s.key}-date`] = `Sector ${i + 1}: select a date & time`
+      })
+    } else {
+      if (!departure.trim()) errs.departure = 'Please enter a departure city'
+      if (!destination.trim()) errs.destination = 'Please enter a destination city'
+      if (!dateTime) errs.dateTime = 'Please select a departure date & time'
+      if (tripType === 'Round Trip' && !returnDateTime) errs.returnDateTime = 'Please select a return date & time'
+    }
+
     setErrors(errs)
     return Object.keys(errs).length === 0
+  }
+
+  function addSector() {
+    setSectors(prev => [...prev, newSector()])
+  }
+
+  function removeSector(key) {
+    setSectors(prev => (prev.length <= MIN_SECTORS ? prev : prev.filter(s => s.key !== key)))
+  }
+
+  function updateSector(key, patch) {
+    setSectors(prev => prev.map(s => (s.key === key ? { ...s, ...patch } : s)))
   }
 
   /**
@@ -141,19 +192,72 @@ export default function Home() {
    * page and the 60-minute countdown all read — a renamed key here fails
    * silently two pages later.
    */
+  /**
+   * Submit is now gated on a verified mobile number. Operators phone customers
+   * back with their quotes, so a request carrying an unreachable number costs
+   * the desk a booking; verifying up front also means the number is already on
+   * file when the membership tier needs it.
+   *
+   * A completed verification is remembered for 30 days, so this only interrupts
+   * a customer once — the token is checked with the API rather than trusted
+   * from localStorage, because an expired one would otherwise be sent along and
+   * silently ignored, leaving the request unverified without anyone noticing.
+   */
   async function getQuotes() {
     if (!validate()) return
+
+    // Escape hatch for the window between shipping this and SMS actually
+    // delivering — see VITE_REQUIRE_PHONE_VERIFICATION in config/env.js.
+    if (!config.REQUIRE_PHONE_VERIFICATION) return submitQuery(null)
+
+    const stored = (() => {
+      try { return localStorage.getItem(PHONE_TOKEN_KEY) } catch { return null }
+    })()
+
+    if (stored) {
+      try {
+        const res = await otpApi.status(stored)
+        if (res.data.valid) return submitQuery(stored)
+      } catch { /* fall through to verification */ }
+    }
+
+    setOtpOpen(true)
+  }
+
+  async function submitQuery(phoneToken) {
     setLoading(true)
 
-    const [flightDate, flightTime] = dateTime.split('T')
-    const [returnDate, returnTime] = returnDateTime ? returnDateTime.split('T') : ['', '']
+    // In multi-sector mode the single From/To/Date row is not filled in, so the
+    // top-level columns are derived from the legs: first departure, last
+    // arrival, first date, and the largest passenger count on any leg. The
+    // queries table stores the full list in `sectors`, but the operator and
+    // admin lists read these flat columns — leaving them null would show the
+    // request as a blank row. `passengers` is the max because the aircraft has
+    // to seat the busiest leg.
+    const first = sectors[0]
+    const last = sectors[sectors.length - 1]
+
+    const [flightDate, flightTime] = isMulti
+      ? first.dateTime.split('T')
+      : dateTime.split('T')
+    const [returnDate, returnTime] = !isMulti && returnDateTime ? returnDateTime.split('T') : ['', '']
 
     const queryData = {
       tripType: TRIP_TYPES.find(([label]) => label === tripType)[1],
-      departure, destination, flightDate, flightTime,
+      departure: isMulti ? first.from : departure,
+      destination: isMulti ? last.to : destination,
+      flightDate,
+      flightTime,
       returnDate: returnDate || null, returnTime: returnTime || null,
-      passengers: pax,
+      passengers: isMulti ? Math.max(...sectors.map(s => s.pax)) : pax,
+      // v2's payload shape, kept so rows written by either site read the same.
+      sectors: isMulti
+        ? sectors.map(s => ({ from: s.from, to: s.to, datetime: s.dateTime, passengers: s.pax }))
+        : null,
       aircraftCategory: aircraftType,
+      // The API reads client_phone out of this token, not out of the body, so
+      // the number on the request is the one that was actually verified.
+      phoneToken,
       medivac: specials.includes('medivac'),
       pets: specials.includes('pets'),
       vip: specials.includes('vip'),
@@ -279,6 +383,81 @@ export default function Home() {
             </div>
           </div>
 
+          {isMulti ? (
+            <div className="sectors rv">
+              {sectors.map((s, i) => (
+                <div className="sector" key={s.key}>
+                  <div className="sector__hd">
+                    <span className="sector__n">Sector {i + 1}</span>
+                    <button
+                      type="button"
+                      className="sector__rm"
+                      onClick={() => removeSector(s.key)}
+                      disabled={sectors.length <= MIN_SECTORS}
+                      title={sectors.length <= MIN_SECTORS ? `A multi-sector trip needs at least ${MIN_SECTORS} legs` : 'Remove this sector'}
+                      aria-label={`Remove sector ${i + 1}`}>✕</button>
+                  </div>
+
+                  <div className="form-strip form-strip--sec">
+                    <div className="fc">
+                      <label htmlFor={`sec-from-${s.key}`}>From</label>
+                      <AirportInput
+                        id={`sec-from-${s.key}`}
+                        placeholder="Departure city or airport"
+                        value={s.from}
+                        onChange={(v) => updateSector(s.key, { from: v })} />
+                      {errors[`sec-${s.key}-from`] && <div className="fc-err">{errors[`sec-${s.key}-from`]}</div>}
+                    </div>
+                    <div className="fc">
+                      <label htmlFor={`sec-to-${s.key}`}>To</label>
+                      <AirportInput
+                        id={`sec-to-${s.key}`}
+                        placeholder="Destination city or airport"
+                        value={s.to}
+                        onChange={(v) => updateSector(s.key, { to: v })} />
+                      {errors[`sec-${s.key}-to`] && <div className="fc-err">{errors[`sec-${s.key}-to`]}</div>}
+                    </div>
+                    <div className="fc">
+                      <label htmlFor={`sec-date-${s.key}`}>Date &amp; Time</label>
+                      <input
+                        id={`sec-date-${s.key}`}
+                        type="datetime-local"
+                        value={s.dateTime}
+                        onChange={(e) => updateSector(s.key, { dateTime: e.target.value })} />
+                      {errors[`sec-${s.key}-date`] && <div className="fc-err">{errors[`sec-${s.key}-date`]}</div>}
+                    </div>
+                    <div className="fc">
+                      <label>Passengers</label>
+                      <div className="pax" role="group" aria-label={`Passengers, sector ${i + 1}`}>
+                        <button
+                          type="button"
+                          className="pax__btn"
+                          onClick={() => updateSector(s.key, { pax: Math.max(PAX_MIN, s.pax - 1) })}
+                          disabled={s.pax <= PAX_MIN}
+                          aria-label="One fewer passenger">−</button>
+                        <span className="pax__n" aria-live="polite">{s.pax}</span>
+                        <button
+                          type="button"
+                          className="pax__btn"
+                          onClick={() => updateSector(s.key, { pax: Math.min(PAX_MAX, s.pax + 1) })}
+                          disabled={s.pax >= PAX_MAX}
+                          aria-label="One more passenger">+</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <div className="sectors__foot">
+                <button type="button" className="sector__add" onClick={addSector}>
+                  <span>+</span> Add Sector
+                </button>
+                <button className="sub-btn sub-btn--sec" onClick={getQuotes} disabled={loading}>
+                  {loading ? 'Requesting…' : 'Request Quotes →'}
+                </button>
+              </div>
+            </div>
+          ) : (
           <div className={`form-strip rv${tripType === 'Round Trip' ? ' form-strip--rt' : ''}`}>
             <div className="fc">
               <label htmlFor="departure">From</label>
@@ -303,20 +482,24 @@ export default function Home() {
               </div>
             )}
             <div className="fc">
-              <label htmlFor="pax">Passengers</label>
-              <div className="sel">
-                <select
-                  id="pax"
-                  value={pax}
-                  onChange={(e) => setPax(e.target.value === '' ? '' : Number(e.target.value))}
-                  tabIndex={5}>
-                  <option value="" disabled>Select count</option>
-                  {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-                    <option key={n} value={n}>{n === 7 ? '7+ Passengers' : `${n} Passenger${n > 1 ? 's' : ''}`}</option>
-                  ))}
-                </select>
+              <label>Passengers</label>
+              <div className="pax" role="group" aria-label="Passengers">
+                <button
+                  type="button"
+                  className="pax__btn"
+                  onClick={() => setPax(p => Math.max(PAX_MIN, p - 1))}
+                  disabled={pax <= PAX_MIN}
+                  aria-label="One fewer passenger"
+                  tabIndex={5}>−</button>
+                <span className="pax__n" aria-live="polite">{pax}</span>
+                <button
+                  type="button"
+                  className="pax__btn"
+                  onClick={() => setPax(p => Math.min(PAX_MAX, p + 1))}
+                  disabled={pax >= PAX_MAX}
+                  aria-label="One more passenger"
+                  tabIndex={5}>+</button>
               </div>
-              {errors.pax && <div className="fc-err">{errors.pax}</div>}
             </div>
             <div className="fc fc--sub">
               <button className="sub-btn" onClick={getQuotes} disabled={loading} tabIndex={6}>
@@ -324,6 +507,7 @@ export default function Home() {
               </button>
             </div>
           </div>
+          )}
 
           <div className="booking__spec rv">
             <span className="spec-lbl">Special Requirements</span>
@@ -470,6 +654,14 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Opened by Request Quotes when this browser has no current verification.
+          onVerified hands back the signed token and the submit picks up exactly
+          where it left off, so the customer never re-enters the form. */}
+      <OtpModal
+        open={otpOpen}
+        onClose={() => setOtpOpen(false)}
+        onVerified={(token) => { setOtpOpen(false); submitQuery(token) }}
+      />
     </div>
   )
 }

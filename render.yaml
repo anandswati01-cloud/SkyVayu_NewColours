@@ -62,6 +62,41 @@ services:
         sync: false
       - key: ADMIN_EMAIL
         sync: false
+      # SMS provider for phone verification. Without a working provider the
+      # charter form cannot be submitted at all, and the API refuses to boot
+      # with SMS_PROVIDER=console in production. Indian numbers additionally
+      # require TRAI DLT registration — see backend/.env.example.
+      - key: SMS_PROVIDER
+        sync: false
+      - key: SMS_GATEWAY_URL
+        sync: false
+      - key: SMS_GATEWAY_METHOD
+        sync: false
+      - key: SMS_GATEWAY_BODY
+        sync: false
+      - key: SMS_GATEWAY_USER
+        sync: false
+      - key: SMS_GATEWAY_PASS
+        sync: false
+      # Must match the DLT-approved wording exactly, with {otp} for {#var#}.
+      - key: SMS_TEMPLATE
+        sync: false
+      - key: DLT_TE_ID
+        sync: false
+      - key: DLT_PE_ID
+        sync: false
+      - key: MSG91_AUTH_KEY
+        sync: false
+      - key: MSG91_TEMPLATE_ID
+        sync: false
+      - key: MSG91_SENDER_ID
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM_NUMBER
+        sync: false
 
       # ── Non-secret defaults ────────────────────────────────────────────────
       - key: EMAIL_FROM

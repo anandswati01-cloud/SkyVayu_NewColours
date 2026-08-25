@@ -43,4 +43,19 @@ const webhookLimiter = rateLimit({
   message: { error: 'Too many webhook deliveries.' },
 });
 
-module.exports = { apiLimiter, authLimiter, webhookLimiter };
+// Phone verification.
+//
+// otpController already caps sends per number and per IP by counting rows, but
+// those counts cost a database round trip each. This sits in front so a flood
+// is refused in memory before it reaches Supabase. Deliberately looser than the
+// per-number caps — it is a floor under them, not the real limit.
+const otpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipInDev,
+  message: { error: 'Too many verification requests. Please try again later.' },
+});
+
+module.exports = { apiLimiter, authLimiter, webhookLimiter, otpLimiter };
