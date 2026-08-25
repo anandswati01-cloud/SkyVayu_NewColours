@@ -32,12 +32,14 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* These four are home-page sections, not routes. */}
+          {/* Fleet and About Us are full pages, matching the header. Destinations
+              and Get Quotes have no page of their own — they scroll to sections
+              of the home page, from whatever route the footer is rendered on. */}
           <div className="ft__col">
             <h4>Navigate</h4>
             <ul>
-              <li><a onClick={() => goToSection('fleet')}>Aircraft</a></li>
-              <li><a onClick={() => goToSection('about')}>About Us</a></li>
+              <li><Link to="/fleet">Fleet</Link></li>
+              <li><Link to="/about">About Us</Link></li>
               <li><a onClick={() => goToSection('destinations')}>Destinations</a></li>
               <li><a onClick={() => goToSection('booking')}>Get Quotes</a></li>
               <li><Link to="/operator">Operator Login</Link></li>

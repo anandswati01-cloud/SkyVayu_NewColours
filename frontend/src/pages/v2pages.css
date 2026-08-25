@@ -1,0 +1,483 @@
+/* Fleet and About, ported from the Charter-v2 site (fleet.html / about.html).
+ *
+ * Everything is scoped under .v2page on purpose. The marketing home page, the
+ * navigation and the footer now run on the v1 brass design, and these two pages
+ * keep the older navy/gold identity they were written for. Scoping means neither
+ * set of rules can reach into the other — a class named .page-header here cannot
+ * silently restyle a section of Home.
+ *
+ * The tokens below (--navy, --gold, --font-display, …) are the original palette
+ * kept in index.css. Nothing new is introduced.
+ *
+ * The v2 pages inherited `a { text-decoration: none; color: inherit }` from a
+ * global reset this app does not have, so the two anchor CTAs restate it.
+ */
+
+.v2page {
+  background: var(--navy);
+}
+
+/* ── Page header (shared by both pages) ─────────────────────────────────────── */
+.v2page .page-header {
+  padding: 140px 48px 80px;
+  max-width: 1280px;
+  margin: 0 auto;
+  border-bottom: 1px solid var(--white-10);
+}
+
+.v2page .page-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 20px;
+}
+
+.v2page .page-title {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 7vw, 80px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  max-width: 800px;
+  margin-bottom: 28px;
+}
+
+.v2page .page-title em { font-style: italic; color: var(--gold); }
+
+.v2page .page-subtitle {
+  font-size: 17px;
+  color: var(--white-60);
+  line-height: 1.8;
+  max-width: 680px;
+}
+
+/* ── NSOP notice (Fleet) ────────────────────────────────────────────────────── */
+.v2page .nsop-notice {
+  background: var(--navy-light);
+  border: 1px solid var(--white-10);
+  border-left: 3px solid var(--gold);
+  border-radius: 4px;
+  padding: 28px 32px;
+  margin: 48px 0 0;
+  max-width: 860px;
+}
+
+.v2page .nsop-notice-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+
+.v2page .nsop-notice-body {
+  font-size: 15px;
+  color: var(--white-60);
+  line-height: 1.8;
+}
+
+.v2page .nsop-notice-body strong { color: var(--white); font-weight: 500; }
+
+/* ── Category filter (Fleet) ────────────────────────────────────────────────── */
+.v2page .filter-bar {
+  padding: 48px 48px 0;
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.v2page .filter-btn {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 8px 18px;
+  border-radius: 2px;
+  border: 1px solid var(--white-10);
+  background: transparent;
+  color: var(--white-60);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.v2page .filter-btn:hover,
+.v2page .filter-btn.active {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(251,191,36,0.06);
+}
+
+/* ── Fleet grid ─────────────────────────────────────────────────────────────── */
+.v2page .fleet-section {
+  padding: 48px 48px 80px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.v2page .fleet-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+}
+
+.v2page .aircraft-card {
+  background: var(--navy-light);
+  border: 1px solid var(--white-10);
+  overflow: hidden;
+  transition: transform 0.25s, border-color 0.25s;
+}
+
+.v2page .aircraft-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(251,191,36,0.35);
+}
+
+.v2page .aircraft-img-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  background: var(--navy-mid);
+}
+
+.v2page .aircraft-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s;
+  filter: brightness(0.88);
+}
+
+.v2page .aircraft-card:hover .aircraft-img-wrap img {
+  transform: scale(1.04);
+}
+
+.v2page .aircraft-category-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  background: rgba(12,19,36,0.82);
+  border: 1px solid var(--white-10);
+  color: var(--gold);
+  padding: 4px 10px;
+  border-radius: 2px;
+  backdrop-filter: blur(6px);
+}
+
+.v2page .aircraft-body { padding: 24px 24px 28px; }
+
+.v2page .aircraft-name {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -0.3px;
+  margin-bottom: 4px;
+}
+
+.v2page .aircraft-full-name {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--white-30);
+  margin-bottom: 20px;
+}
+
+.v2page .aircraft-specs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--white-10);
+  border: 1px solid var(--white-10);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.v2page .spec-item {
+  background: var(--navy);
+  padding: 12px 14px;
+  text-align: center;
+}
+
+.v2page .spec-value {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.v2page .spec-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--white-30);
+}
+
+/* ── Bottom CTA (Fleet) ─────────────────────────────────────────────────────── */
+.v2page .fleet-cta {
+  background: var(--navy-light);
+  border-top: 1px solid var(--white-10);
+  padding: 80px 48px;
+  text-align: center;
+}
+
+.v2page .fleet-cta-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 20px;
+}
+
+.v2page .fleet-cta-heading {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  margin-bottom: 16px;
+}
+
+.v2page .fleet-cta-heading em { font-style: italic; color: var(--gold); }
+
+.v2page .fleet-cta-sub {
+  font-size: 15px;
+  color: var(--white-60);
+  max-width: 520px;
+  margin: 0 auto 36px;
+  line-height: 1.75;
+}
+
+.v2page .fleet-cta-btn {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--navy);
+  background: var(--gold);
+  padding: 16px 36px;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.v2page .fleet-cta-btn:hover { background: var(--gold-light); }
+
+/* ── About sections ─────────────────────────────────────────────────────────── */
+.v2page .about-section {
+  padding: 80px 48px;
+  max-width: 1280px;
+  margin: 0 auto;
+  border-bottom: 1px solid var(--white-10);
+}
+
+.v2page .about-section:last-of-type { border-bottom: none; }
+
+.v2page .section-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 32px;
+}
+
+.v2page .section-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 80px;
+  align-items: start;
+}
+
+.v2page .section-heading {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+}
+
+.v2page .section-heading em { font-style: italic; color: var(--gold); }
+
+.v2page .section-body {
+  font-size: 16px;
+  line-height: 1.85;
+  color: var(--white-60);
+}
+
+.v2page .section-body p { margin: 0 0 20px; }
+.v2page .section-body p:last-child { margin-bottom: 0; }
+
+/* ── Stats (About) ──────────────────────────────────────────────────────────── */
+.v2page .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--white-10);
+  border: 1px solid var(--white-10);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 64px;
+}
+
+.v2page .stat-item {
+  background: var(--navy-light);
+  padding: 40px 32px;
+  text-align: center;
+}
+
+.v2page .stat-number {
+  font-family: var(--font-display);
+  font-size: 52px;
+  font-weight: 400;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.v2page .stat-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--white-30);
+}
+
+/* ── Differentiators (About) ────────────────────────────────────────────────── */
+.v2page .diff-heading {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  margin-bottom: 56px;
+  max-width: 480px;
+}
+
+.v2page .diff-heading em { font-style: italic; color: var(--gold); }
+
+.v2page .diff-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--white-10);
+  border: 1px solid var(--white-10);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.v2page .diff-item {
+  background: var(--navy-light);
+  padding: 36px 32px;
+}
+
+.v2page .diff-icon {
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+
+.v2page .diff-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 12px;
+}
+
+.v2page .diff-body {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--white-60);
+}
+
+/* ── Promise / CTA (About) ──────────────────────────────────────────────────── */
+.v2page .promise-section {
+  background: var(--navy-light);
+  border-top: 1px solid var(--white-10);
+  border-bottom: 1px solid var(--white-10);
+  padding: 100px 48px;
+  text-align: center;
+}
+
+.v2page .promise-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 24px;
+}
+
+.v2page .promise-heading {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -1px;
+  margin-bottom: 24px;
+}
+
+.v2page .promise-heading em { font-style: italic; color: var(--gold); }
+
+.v2page .promise-body {
+  font-size: 16px;
+  color: var(--white-60);
+  line-height: 1.8;
+  max-width: 680px;
+  margin: 0 auto 40px;
+}
+
+.v2page .promise-cta {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--navy);
+  background: var(--gold);
+  padding: 16px 36px;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.v2page .promise-cta:hover { background: var(--gold-light); }
+
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .v2page .fleet-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .v2page .page-header,
+  .v2page .fleet-section,
+  .v2page .filter-bar,
+  .v2page .about-section { padding-left: 24px; padding-right: 24px; }
+  .v2page .section-grid { grid-template-columns: 1fr; gap: 32px; }
+  .v2page .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .v2page .diff-grid { grid-template-columns: 1fr; }
+  .v2page .promise-section { padding: 64px 24px; }
+}
+
+@media (max-width: 640px) {
+  .v2page .fleet-grid { grid-template-columns: 1fr; }
+  .v2page .stats-grid { grid-template-columns: 1fr 1fr; }
+}
