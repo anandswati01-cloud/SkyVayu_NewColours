@@ -46,6 +46,9 @@ export const authApi = {
   login: (body) => api.post('/api/auth/login', body),
   logout: () => api.post('/api/auth/logout'),
   profile: () => api.get('/api/auth/profile'),
+  // Phone and KYC details. The server whitelists the columns — kyc_verified is
+  // not one of them, so a customer cannot mark their own documents approved.
+  updateProfile: (body) => api.patch('/api/auth/profile', body),
   refresh: (refreshToken) => api.post('/api/auth/refresh', { refreshToken }),
   syncProfile: (body) => api.post('/api/auth/sync-profile', body),
   forgotPassword: (email) => api.post('/api/auth/forgot-password', { email }),

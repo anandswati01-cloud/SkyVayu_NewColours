@@ -158,6 +158,10 @@ export default function Home() {
     if (isMulti) {
       // The single From/To/Date row is not on screen in this mode, so validating
       // it would block the form on fields the user cannot see or fill.
+      //
+      // Every leg is validated, but only Sector 1 renders its messages inline —
+      // see the `i === 0` guard in the sector list. Repeating the same three red
+      // lines under every leg buried the form.
       sectors.forEach((s, i) => {
         if (!s.from.trim()) errs[`sec-${s.key}-from`] = `Sector ${i + 1}: enter a departure city`
         if (!s.to.trim()) errs[`sec-${s.key}-to`] = `Sector ${i + 1}: enter a destination city`
@@ -375,7 +379,14 @@ export default function Home() {
             <div className="radios">
               {TRIP_TYPES.map(([label]) => (
                 <label className="radio-item" key={label}>
-                  <input type="radio" name="trip" checked={tripType === label} onChange={() => setTripType(label)} />
+                  {/* Errors are dropped on a mode change: the fields they refer
+                      to are swapped out with the mode, so keeping them would
+                      mark up a form the customer has not filled in yet. */}
+                  <input
+                    type="radio"
+                    name="trip"
+                    checked={tripType === label}
+                    onChange={() => { setTripType(label); setErrors({}) }} />
                   <div className="radio-mark" />
                   <span className="radio-lbl">{label}</span>
                 </label>
@@ -406,7 +417,7 @@ export default function Home() {
                         placeholder="Departure city or airport"
                         value={s.from}
                         onChange={(v) => updateSector(s.key, { from: v })} />
-                      {errors[`sec-${s.key}-from`] && <div className="fc-err">{errors[`sec-${s.key}-from`]}</div>}
+                      {i === 0 && errors[`sec-${s.key}-from`] && <div className="fc-err">{errors[`sec-${s.key}-from`]}</div>}
                     </div>
                     <div className="fc">
                       <label htmlFor={`sec-to-${s.key}`}>To</label>
@@ -415,7 +426,7 @@ export default function Home() {
                         placeholder="Destination city or airport"
                         value={s.to}
                         onChange={(v) => updateSector(s.key, { to: v })} />
-                      {errors[`sec-${s.key}-to`] && <div className="fc-err">{errors[`sec-${s.key}-to`]}</div>}
+                      {i === 0 && errors[`sec-${s.key}-to`] && <div className="fc-err">{errors[`sec-${s.key}-to`]}</div>}
                     </div>
                     <div className="fc">
                       <label htmlFor={`sec-date-${s.key}`}>Date &amp; Time</label>
@@ -424,7 +435,7 @@ export default function Home() {
                         type="datetime-local"
                         value={s.dateTime}
                         onChange={(e) => updateSector(s.key, { dateTime: e.target.value })} />
-                      {errors[`sec-${s.key}-date`] && <div className="fc-err">{errors[`sec-${s.key}-date`]}</div>}
+                      {i === 0 && errors[`sec-${s.key}-date`] && <div className="fc-err">{errors[`sec-${s.key}-date`]}</div>}
                     </div>
                     <div className="fc">
                       <label>Passengers</label>
@@ -622,7 +633,7 @@ export default function Home() {
               and costs nothing to request.
             </p>
             <button className="btn-p" onClick={() => scrollTo('booking')}>Request Your Charter →</button>
-            <button className="btn-t" onClick={() => navigate('/operator')}>Operator Login</button>
+            {/* <button className="btn-t" onClick={() => navigate('/operator')}>Operator Login</button> */}
           </div>
         </div>
       </section>

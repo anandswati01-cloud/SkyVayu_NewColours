@@ -3,7 +3,6 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import useAuthStore from '../../store/authStore'
 import { signInWithGoogle, signInAsDevUser } from '../../services/supabase'
 import { showToast } from '../ui/Toast'
-import useSectionNav from './useSectionNav'
 import OperatorLoginForm from '../../pages/operator/OperatorLoginForm'
 import logo from '../../assets/skyvayu-logo.png'
 import './layout.css'
@@ -14,8 +13,10 @@ import './layout.css'
 // "Home" pointing at an id that does not exist.
 //
 // "Operator Login" is not in this list on purpose: it opens the sign-in card in
-// a modal over whatever page you are on, rather than navigating away. The
-// /operator route still exists and still works for anyone who bookmarked it.
+// a modal over whatever page you are on, rather than navigating away, and it is
+// only offered on the home page (see isHome below). The /operator route still
+// exists and still works for anyone who bookmarked it, and the footer links to
+// it from every page.
 const LINKS = [
   ['/', 'Home'],
   ['/fleet', 'Fleet'],
@@ -28,7 +29,6 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const { user, signOut } = useAuthStore()
   const location = useLocation()
-  const jumpTo = useSectionNav()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30)
@@ -49,17 +49,13 @@ export default function Navbar() {
     return () => window.removeEventListener('keydown', onKey)
   }, [operatorOpen])
 
-  function goToSection(id) {
-    setMenuOpen(false)
-    jumpTo(id)
-  }
-
   const displayName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || ''
 
-  // Fleet and About are the two pages that carry the older v2 design and end in
-  // their own "Get Fastest Quotes" call to action. Operator sign-in is left out
-  // of the header there so the page has a single, unambiguous next step.
-  const hideOperatorLogin = ['/fleet', '/about'].includes(location.pathname)
+  // Operator sign-in is a home-page-only entry point, parked on the right of the
+  // bar. Inner pages drop it so they carry one unambiguous sign-in affordance —
+  // Member Access, in the links row after "About Us". Operators still reach
+  // /operator from the footer, which renders on every page.
+  const isHome = location.pathname === '/'
 
   return (
     <>
@@ -79,8 +75,11 @@ export default function Navbar() {
                 </NavLink>
               </li>
             ))}
-            {!hideOperatorLogin && (
-              <li><a onClick={() => setOperatorOpen(true)}>Operator Login</a></li>
+            {/* Member Access sits in the links row, straight after "About Us".
+                It is a sign-in action rather than a destination, so it is a
+                plain <a> — never a NavLink — and can never be marked active. */}
+            {!user && (
+              <li><a onClick={signInWithGoogle}>Member Access</a></li>
             )}
           </ul>
 
@@ -92,23 +91,22 @@ export default function Navbar() {
                 <button className="nav__si" onClick={() => signOut()}>Sign out</button>
               </div>
             ) : (
-              <>
-                {import.meta.env.DEV && (
-                  <button
-                    className="nav__dev"
-                    title="Local only — email/password login, no Google redirect"
-                    onClick={async () => {
-                      const { error } = await signInAsDevUser()
-                      if (error) showToast(error.message + ' — run: cd backend && npm run dev:user', 'error')
-                      else showToast('Signed in as dev user', 'success')
-                    }}>
-                    Dev Sign In
-                  </button>
-                )}
-                <button className="nav__si" onClick={signInWithGoogle}>Member Access</button>
-              </>
+              import.meta.env.DEV && (
+                <button
+                  className="nav__dev"
+                  title="Local only — email/password login, no Google redirect"
+                  onClick={async () => {
+                    const { error } = await signInAsDevUser()
+                    if (error) showToast(error.message + ' — run: cd backend && npm run dev:user', 'error')
+                    else showToast('Signed in as dev user', 'success')
+                  }}>
+                  Dev Sign In
+                </button>
+              )
             )}
-            <a className="nav__cta" onClick={() => goToSection('booking')}>Request a Charter</a>
+            {isHome && (
+              <button className="nav__si" onClick={() => setOperatorOpen(true)}>Operator Login</button>
+            )}
             <button className="nav__burger" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
               {menuOpen ? '✕' : '☰'}
             </button>
@@ -118,22 +116,20 @@ export default function Navbar() {
 
       {menuOpen && (
         <div className="nav__panel">
-          {/* Same four destinations as the desktop bar. The panel used to render
-              these twice — once as scroll buttons, once as links — which showed
-              Fleet, About Us and Operator Login as duplicate rows that behaved
-              differently. Closing on click is explicit because tapping "Home"
-              from the home page leaves the path unchanged, so the effect that
-              watches location.pathname never fires. */}
+          {/* Same destinations, in the same order, as the desktop bar. The panel
+              used to render these twice — once as scroll buttons, once as links
+              — which showed Fleet, About Us and Operator Login as duplicate rows
+              that behaved differently. Closing on click is explicit because
+              tapping "Home" from the home page leaves the path unchanged, so the
+              effect that watches location.pathname never fires. */}
           {LINKS.map(([to, label]) => (
             <Link key={to} to={to} onClick={() => setMenuOpen(false)}>{label}</Link>
           ))}
-          {!hideOperatorLogin && (
+          {!user && <button onClick={signInWithGoogle}>Member Access</button>}
+          {isHome && (
             <button onClick={() => { setMenuOpen(false); setOperatorOpen(true) }}>Operator Login</button>
           )}
-          <a onClick={() => goToSection('booking')}>Request a Charter</a>
-          {user
-            ? <Link to="/profile">My Bookings</Link>
-            : <button onClick={signInWithGoogle}>Member Access</button>}
+          {user && <Link to="/profile">My Bookings</Link>}
         </div>
       )}
 

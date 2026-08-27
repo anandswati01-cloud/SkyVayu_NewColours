@@ -112,6 +112,52 @@ async function profile(req, res, next) {
   } catch (err) { next(err); }
 }
 
+/**
+ * Fields a customer is allowed to change about themselves.
+ *
+ * Deliberately a whitelist, and deliberately missing two columns that live on
+ * the same row: `kyc_verified`, which only the charter desk may set after
+ * looking at the documents, and `is_admin`, which grants the admin dashboard.
+ * The profile page used to write to this table straight from the browser, where
+ * both were one request away.
+ */
+const PROFILE_UPDATABLE = [
+  'phone',
+  'date_of_birth',
+  'nationality',
+  'passport_number',
+  'aadhaar_number',
+  'passport_uploaded',
+  'aadhaar_uploaded',
+];
+
+// PATCH /api/auth/profile — a customer editing their own profile and KYC details
+async function updateProfile(req, res, next) {
+  try {
+    const { id, type } = req.user;
+    if (type === 'operator') {
+      return error(res, 'Operator accounts are managed from the operator portal.', 403);
+    }
+
+    const data = {};
+    for (const field of PROFILE_UPDATABLE) {
+      if (req.body[field] !== undefined) data[field] = req.body[field];
+    }
+
+    if (Object.keys(data).length === 0) {
+      return error(res, `Nothing to update. Allowed fields: ${PROFILE_UPDATABLE.join(', ')}.`, 400);
+    }
+
+    // The row is keyed by the id on the verified token, never one from the body,
+    // so this can only ever touch the caller's own profile.
+    data.updated_at = new Date().toISOString();
+    const rows = await sb('profiles').update(data).eq('id', id).run();
+
+    if (!rows || !rows.length) return error(res, 'Profile not found.', 404);
+    return success(res, rows[0]);
+  } catch (err) { next(err); }
+}
+
 // POST /api/auth/refresh
 async function refresh(req, res, next) {
   try {
@@ -206,4 +252,4 @@ async function syncProfile(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { login, logout, profile, refresh, forgotPassword, resetPassword, syncProfile };
+module.exports = { login, logout, profile, updateProfile, refresh, forgotPassword, resetPassword, syncProfile };

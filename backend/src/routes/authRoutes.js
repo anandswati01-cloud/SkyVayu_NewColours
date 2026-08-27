@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const authController = require('../controllers/authController');
-const { authenticate, authenticateSupabase } = require('../middleware/auth');
+const { authenticate, authenticateSupabase, authenticateAny } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const { authLimiter } = require('../middleware/rateLimiter');
 const {
@@ -19,7 +19,17 @@ router.post('/login', authLimiter, loginRules, validate, authController.login);
 router.post('/logout', authenticate, authController.logout);
 
 // GET /api/auth/profile
-router.get('/profile', authenticate, authController.profile);
+//
+// Operators and customers both land here and get their own shape back.
+// authenticateAny because a customer arrives with a Supabase token, which plain
+// `authenticate` rejects — the customer branch of the handler existed but was
+// unreachable, which is why the profile page could never load anything.
+router.get('/profile', authenticateAny, authController.profile);
+
+// PATCH /api/auth/profile — customer edits their own phone and KYC details.
+// The handler whitelists the columns; kyc_verified and is_admin are not among
+// them.
+router.patch('/profile', authenticateSupabase, authController.updateProfile);
 
 // POST /api/auth/refresh
 router.post('/refresh', authLimiter, authController.refresh);

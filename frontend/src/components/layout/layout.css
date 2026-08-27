@@ -29,8 +29,8 @@
 .nav__links a:hover { color: var(--t1); }
 /* Current page. Brass rather than the v2 gold, because this navigation runs on
    the v1 palette — gold here would be the only warm-yellow element in the bar.
-   Only the three destinations can carry it; "Operator Login" and the CTA are
-   actions, not places, so neither is ever marked active. */
+   Only the three destinations can carry it; "Operator Login" and "Member Access"
+   are actions, not places, so neither is ever marked active. */
 .nav__links a.active {
   color: var(--brass);
   border-bottom: 2px solid var(--brass);
@@ -43,13 +43,6 @@
   cursor: pointer; text-decoration: none; transition: color .25s; white-space: nowrap;
 }
 .nav__si:hover { color: var(--t1); }
-.nav__cta {
-  font-family: var(--font-b); font-size: .65rem; font-weight: 500; letter-spacing: .2em;
-  text-transform: uppercase; color: var(--bg); background: var(--brass); border: none;
-  padding: 10px 22px; cursor: pointer; text-decoration: none; transition: background .25s;
-  display: inline-block; white-space: nowrap;
-}
-.nav__cta:hover { background: var(--brass-lt); }
 .nav__user { display: flex; align-items: center; gap: 14px; }
 .nav__name {
   font-family: var(--font-b); font-size: .68rem; letter-spacing: .1em;
