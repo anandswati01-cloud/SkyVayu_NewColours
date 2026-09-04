@@ -4,6 +4,7 @@ import useOperatorStore from '../../store/operatorStore'
 import { quoteApi, fleetApi, operatorApi } from '../../services/api'
 import { showToast } from '../../components/ui/Toast'
 import { Icon, Modal, ConfirmDialog, SkeletonCards, SkeletonTiles } from './OperatorUI'
+import logo from '../../assets/skyvayu-logo.png'
 import './operator.css'
 
 const fmt = n => 'Rs.' + Number(n || 0).toLocaleString('en-IN')
@@ -43,8 +44,12 @@ function Sidebar({ section, setSection, user, operator, onLogout, isOwner, open 
   return (
     <aside className={`op__side${open ? ' is-open' : ''}`}>
       <div className="op__brand">
-        <div className="op__brand-name">SkyVayu</div>
-        <div className="op__brand-sub">Operator Portal</div>
+        {/* Wrapper shrinks to the mark's width so the caption centres under the
+            logo rather than under the full sidebar. */}
+        <div className="op__brand-mark">
+          <img className="op__logo" src={logo} alt="SkyVayu" />
+          <div className="op__brand-sub">Operator Portal</div>
+        </div>
       </div>
 
       {/* A button rather than a clickable div: this is the shortcut into the
