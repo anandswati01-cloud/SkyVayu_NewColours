@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useOperatorStore from '../../store/operatorStore'
 import { quoteApi, fleetApi, operatorApi } from '../../services/api'
 import { showToast } from '../../components/ui/Toast'
+import { Icon, Modal, ConfirmDialog, SkeletonCards, SkeletonTiles } from './OperatorUI'
+import './operator.css'
 
 const fmt = n => 'Rs.' + Number(n || 0).toLocaleString('en-IN')
 const fmtDate = (date) => {
@@ -21,47 +23,55 @@ const fmtDate = (date) => {
 const daysUntil = d => { if (!d) return null; return Math.ceil((new Date(d) - new Date()) / 86400000) }
 const timeRemaining = ms => { if (ms <= 0) return 'Expired'; const m = Math.floor(ms / 60000), s = Math.floor((ms % 60000) / 1000); return `${m}m ${String(s).padStart(2, '0')}s` }
 
-// ── Sidebar nav items ──────────────────────────────────────────────────────────
-function Sidebar({ section, setSection, user, operator, onLogout, isOwner }) {
-  const navItems = [
-    { key: 'queries', label: 'Queries', icon: '📋' },
-    { key: 'fleet', label: 'Fleet', icon: '✈' },
-    { key: 'roster', label: 'Roster', icon: '📅' },
-    ...(isOwner ? [
-      { key: 'employees', label: 'Employees', icon: '👥' },
-      { key: 'revenue', label: 'Revenue', icon: '₹' },
-    ] : []),
-    { key: 'profile', label: 'Profile', icon: '👤' },
-  ]
+// Declared at module scope so the mobile top bar can look up the current
+// section's label without duplicating the list.
+const NAV_ITEMS = [
+  { key: 'queries', label: 'Queries' },
+  { key: 'fleet', label: 'Fleet' },
+  { key: 'roster', label: 'Roster' },
+  { key: 'employees', label: 'Employees', owner: true },
+  { key: 'revenue', label: 'Revenue', owner: true },
+  { key: 'profile', label: 'Profile' },
+]
 
+const navItemsFor = isOwner => NAV_ITEMS.filter(i => !i.owner || isOwner)
+
+// ── Sidebar nav items ──────────────────────────────────────────────────────────
+function Sidebar({ section, setSection, user, operator, onLogout, isOwner, open }) {
   const initials = (user?.fullName || user?.username || '?').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()
 
   return (
-    <aside style={{ width: 220, flexShrink: 0, background: '#0a0f1e', borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0 }}>
-      <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--gold)' }}>SkyVayu</div>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>Operator Portal</div>
+    <aside className={`op__side${open ? ' is-open' : ''}`}>
+      <div className="op__brand">
+        <div className="op__brand-name">SkyVayu</div>
+        <div className="op__brand-sub">Operator Portal</div>
       </div>
 
-      <div onClick={() => setSection('profile')} style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--gold)', flexShrink: 0 }}>{initials}</div>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 500, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.fullName || user?.username}</div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{operator?.companyName}</div>
+      {/* A button rather than a clickable div: this is the shortcut into the
+          Profile section and has to be reachable from the keyboard. */}
+      <button type="button" className="op__me" onClick={() => setSection('profile')}>
+        <div className="op__avatar">{initials}</div>
+        <div className="op__me-txt">
+          <div className="op__me-name">{user?.fullName || user?.username}</div>
+          <div className="op__me-org">{operator?.companyName}</div>
         </div>
-      </div>
+      </button>
 
-      <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto' }}>
-        {navItems.map(({ key, label, icon }) => (
-          <div key={key} onClick={() => setSection(key)}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px', cursor: 'pointer', color: section === key ? 'var(--gold)' : 'rgba(255,255,255,0.5)', background: section === key ? 'rgba(251,191,36,0.06)' : 'transparent', borderLeft: `2px solid ${section === key ? 'var(--gold)' : 'transparent'}`, fontSize: 13, transition: 'all 0.15s' }}>
-            <span>{icon}</span> {label}
-          </div>
+      <nav className="op__nav">
+        {navItemsFor(isOwner).map(({ key, label }) => (
+          <button
+            type="button"
+            key={key}
+            onClick={() => setSection(key)}
+            aria-current={section === key ? 'page' : undefined}
+            className={`op__nav-item${section === key ? ' is-active' : ''}`}>
+            <Icon name={key} /> {label}
+          </button>
         ))}
       </nav>
 
-      <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <button onClick={onLogout} style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 4, padding: '9px', color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer' }}>Sign out</button>
+      <div className="op__side-foot">
+        <button className="op__signout" onClick={onLogout}>Sign out</button>
       </div>
     </aside>
   )
@@ -77,15 +87,15 @@ function TimerBar({ createdAt }) {
   const pct = Math.min((elapsed / total) * 100, 100)
   const expired = remaining <= 0
   const urgent = remaining > 0 && remaining < 10 * 60 * 1000
-  const color = expired ? '#e24b4a' : urgent ? '#f59e0b' : 'var(--gold)'
+  const color = expired ? 'var(--op-bad)' : urgent ? 'var(--op-warn)' : 'var(--gold)'
   return (
-    <div style={{ marginTop: 10 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontFamily: 'var(--font-mono)', color, marginBottom: 4 }}>
+    <div className="op-timer">
+      <div className="op-timer__row" style={{ color }}>
         <span>{expired ? 'Window closed' : timeRemaining(remaining)}</span>
         <span>{Math.round(pct)}%</span>
       </div>
-      <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 2 }}>
-        <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 2, transition: 'width 1s' }} />
+      <div className="op-timer__track">
+        <div className="op-timer__fill" style={{ width: `${pct}%`, background: color }} />
       </div>
     </div>
   )
@@ -130,109 +140,101 @@ function QuoteModal({ query, aircraft, onClose, onSubmit, operatorId }) {
     } finally { setLoading(false) }
   }
 
-  const inp = { width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, padding: '10px 12px', color: '#fff', fontFamily: 'var(--font-body)', fontSize: 13, outline: 'none' }
-
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 24, overflowY: 'auto' }} onClick={onClose}>
-      <div style={{ background: '#0f1a30', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, width: '100%', maxWidth: 560, margin: 'auto' }} onClick={e => e.stopPropagation()}>
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 20 }}>Submit Quote</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 20, cursor: 'pointer' }}>✕</button>
-        </div>
-        <div style={{ padding: 24 }}>
-          {/* Query info */}
-          <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 6, padding: '12px 14px', marginBottom: 20, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
-            <strong style={{ color: '#fff' }}>{query.departure || '—'} → {query.destination || '—'}</strong><br />
-            {fmtDate(query.flight_date)}{query.flight_time ? ' at ' + query.flight_time : ''} · {query.passengers} pax
-          </div>
-
-          {/* Live bids */}
-          {bids.length > 0 && (
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>Live bids</div>
-              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '12px 14px', fontSize: 13 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: lowest === bids[0]?.price ? '#4caf50' : 'rgba(255,255,255,0.6)', marginBottom: 4 }}>
-                  <span>Lowest bid</span><strong>{fmt(lowest)}</strong>
-                </div>
-                <div style={{ fontSize: 11, color: isWinning ? '#4caf50' : '#f59e0b', marginTop: 4, fontFamily: 'var(--font-mono)' }}>
-                  {myBid ? (isWinning ? '✓ You have the lowest bid' : `You are outbid. Beat ${fmt(lowest)} to win.`) : `Beat ${fmt(lowest)} to lead.`}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Aircraft */}
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Select Aircraft</div>
-            <select value={selectedAc} onChange={e => setSelectedAc(e.target.value)} style={{ ...inp }}>
-              <option value="">Choose aircraft...</option>
-              {approved.map(a => <option key={a.id} value={a.id}>{a.aircraft_type} | {a.registration}</option>)}
-            </select>
-          </div>
-
-          {/* Charges */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-            {[['Base charge', base, setBase], ['Handling fee', handling, setHandling], ['Crew accommodation', crew, setCrew], ['Catering', catering, setCatering]].map(([label, val, setter]) => (
-              <div key={label}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>{label} (Rs.)</div>
-                <input type="number" value={val} onChange={e => setter(e.target.value)} placeholder="0" style={inp} />
-              </div>
-            ))}
-          </div>
-
-          {/* Total breakdown */}
-          <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 6, padding: '12px 14px', marginBottom: 16, fontSize: 13 }}>
-            {[['Subtotal', subtotal], ['GST (18%)', gst]].map(([k, v]) => (
-              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.6)', marginBottom: 4 }}>
-                <span>{k}</span><span>{fmt(v)}</span>
-              </div>
-            ))}
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--gold)', fontFamily: 'var(--font-display)', fontSize: 18, marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-              <span>Total quote</span><strong>{fmt(total)}</strong>
-            </div>
-          </div>
-
-          {/* Notes */}
-          <div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Notes to client (optional)</div>
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any additional information..." style={{ ...inp, height: 64, resize: 'vertical' }} />
-          </div>
-        </div>
-
-        <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{ padding: '9px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 4, color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)', fontSize: 11, cursor: 'pointer' }}>Cancel</button>
-          <button onClick={handleSubmit} disabled={loading} style={{ padding: '9px 18px', background: 'var(--gold)', border: 'none', borderRadius: 4, color: '#0c1324', fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600, opacity: loading ? 0.6 : 1 }}>
+    <Modal
+      title="Submit Quote"
+      onClose={onClose}
+      footer={
+        <>
+          <button className="op-btn op-btn--ghost" onClick={onClose}>Cancel</button>
+          <button className="op-btn op-btn--gold" onClick={handleSubmit} disabled={loading}>
             {loading ? 'Submitting…' : 'Share quote with client'}
           </button>
+        </>
+      }>
+      {/* Query info */}
+      <div className="op-box op-box--query op-mb-lg">
+        <strong>{query.departure || '—'} → {query.destination || '—'}</strong><br />
+        {fmtDate(query.flight_date)}{query.flight_time ? ' at ' + query.flight_time : ''} · {query.passengers} pax
+      </div>
+
+      {/* Live bids */}
+      {bids.length > 0 && (
+        <div className="op-mb-lg">
+          <div className="op-lbl op-lbl--tight">Live bids</div>
+          <div className="op-box op-box--outlined">
+            <div className="op-sum" style={{ color: lowest === bids[0]?.price ? 'var(--op-ok)' : undefined }}>
+              <span>Lowest bid</span><strong>{fmt(lowest)}</strong>
+            </div>
+            <div className="op-bid-hint" style={{ color: isWinning ? 'var(--op-ok)' : 'var(--op-warn)' }}>
+              {myBid ? (isWinning ? '✓ You have the lowest bid' : `You are outbid. Beat ${fmt(lowest)} to win.`) : `Beat ${fmt(lowest)} to lead.`}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Aircraft */}
+      <div className="op-mb">
+        <label className="op-lbl" htmlFor="op-ac-select">Select Aircraft</label>
+        <select id="op-ac-select" className="op-inp" value={selectedAc} onChange={e => setSelectedAc(e.target.value)}>
+          <option value="">Choose aircraft...</option>
+          {approved.map(a => <option key={a.id} value={a.id}>{a.aircraft_type} | {a.registration}</option>)}
+        </select>
+      </div>
+
+      {/* Charges */}
+      <div className="op-grid op-grid--charges op-mb">
+        {[['Base charge', 'base', base, setBase], ['Handling fee', 'handling', handling, setHandling], ['Crew accommodation', 'crew', crew, setCrew], ['Catering', 'catering', catering, setCatering]].map(([label, id, val, setter]) => (
+          <div key={id}>
+            <label className="op-lbl" htmlFor={`op-charge-${id}`}>{label} (Rs.)</label>
+            <input id={`op-charge-${id}`} className="op-inp" type="number" value={val} onChange={e => setter(e.target.value)} placeholder="0" />
+          </div>
+        ))}
+      </div>
+
+      {/* Total breakdown */}
+      <div className="op-box op-mb">
+        {[['Subtotal', subtotal], ['GST (18%)', gst]].map(([k, v]) => (
+          <div key={k} className="op-sum"><span>{k}</span><span>{fmt(v)}</span></div>
+        ))}
+        <div className="op-sum op-sum--total">
+          <span>Total quote</span><strong>{fmt(total)}</strong>
         </div>
       </div>
-    </div>
+
+      {/* Notes */}
+      <div>
+        <label className="op-lbl" htmlFor="op-notes">Notes to client (optional)</label>
+        <textarea
+          id="op-notes"
+          className="op-inp op-inp--area"
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+          placeholder="Any additional information..." />
+      </div>
+    </Modal>
   )
 }
 
 // ── Queries Section ────────────────────────────────────────────────────────────
 function QueriesSection({ store }) {
-  const { activeQueries, sharedQuotes, confirmedQuotes, expiredQueries, aircraftList, loadAllData, submitQuote, operator } = store
+  const { activeQueries, sharedQuotes, confirmedQuotes, expiredQueries, aircraftList, loadAllData, submitQuote, operator, queriesLoaded } = store
   const [tab, setTab] = useState('active')
   const [quoteModal, setQuoteModal] = useState(null)
-  const isOwner = store.isOwner()
 
   useEffect(() => { loadAllData() }, [])
   useEffect(() => { const iv = setInterval(loadAllData, 10000); return () => clearInterval(iv) }, [])
 
-  const tabStyle = (active) => ({ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', padding: '10px 16px', border: 'none', background: active ? 'rgba(251,191,36,0.1)' : 'transparent', color: active ? 'var(--gold)' : 'rgba(255,255,255,0.4)', borderBottom: `2px solid ${active ? 'var(--gold)' : 'transparent'}`, cursor: 'pointer' })
-  const cardStyle = { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '16px 20px', marginBottom: 12 }
-
   function renderActive() {
-    if (!activeQueries.length) return <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.4)' }}>No active queries right now. New client queries will appear here.</div>
+    if (!activeQueries.length) return <div className="op-empty">No active queries right now. New client queries will appear here.</div>
     return activeQueries.map(q => (
-      <div key={q.id} style={cardStyle}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+      <div key={q.id} className="op-card">
+        <div className="op-card__row op-card__row--top">
           <div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 18, marginBottom: 4 }}>{q.departure || '—'} → {q.destination || '—'}</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{fmtDate(q.flight_date)}{q.flight_time ? ' at ' + q.flight_time : ''} · {q.passengers} pax{q.medivac ? ' · Medivac' : ''}{q.pets ? ' · Pets' : ''}{q.vip ? ' · VIP' : ''}</div>
+            <div className="op-card__title">{q.departure || '—'} → {q.destination || '—'}</div>
+            <div className="op-meta">{fmtDate(q.flight_date)}{q.flight_time ? ' at ' + q.flight_time : ''} · {q.passengers} pax{q.medivac ? ' · Medivac' : ''}{q.pets ? ' · Pets' : ''}{q.vip ? ' · VIP' : ''}</div>
           </div>
-          <button onClick={() => setQuoteModal(q)} style={{ background: 'rgba(23,176,214,0.15)', border: '1px solid rgba(23,176,214,0.4)', borderRadius: 4, padding: '8px 16px', color: '#17b0d6', fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer' }}>Submit quote</button>
+          <button className="op-btn op-btn--cyan" onClick={() => setQuoteModal(q)}>Submit quote</button>
         </div>
         <TimerBar createdAt={q.created_at} />
       </div>
@@ -240,49 +242,43 @@ function QueriesSection({ store }) {
   }
 
   function renderShared() {
-    if (!sharedQuotes.length) return <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.4)' }}>No quotes shared yet.</div>
+    if (!sharedQuotes.length) return <div className="op-empty">No quotes shared yet.</div>
     return sharedQuotes.map(q => (
-      <div key={q.id} style={cardStyle}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div key={q.id} className="op-card">
+        <div className="op-card__row">
           <div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, marginBottom: 4 }}>{q.aircraft_type} {q.aircraft_registration ? `(${q.aircraft_registration})` : ''}</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Shared · Quote: {fmt(q.price)}</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
-              Created Date: {fmtDate(q.created_at)}
-            </div>
+            <div className="op-card__title op-card__title--sm">{q.aircraft_type} {q.aircraft_registration ? `(${q.aircraft_registration})` : ''}</div>
+            <div className="op-meta">Shared · Quote: {fmt(q.price)}</div>
+            <div className="op-meta">Created Date: {fmtDate(q.created_at)}</div>
           </div>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--gold)' }}>{fmt(q.price)}</div>
-          
+          <div className="op-price">{fmt(q.price)}</div>
         </div>
       </div>
     ))
   }
 
   function renderConfirmed() {
-    if (!confirmedQuotes.length) return <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.4)' }}>No confirmed bookings yet.</div>
+    if (!confirmedQuotes.length) return <div className="op-empty">No confirmed bookings yet.</div>
     return confirmedQuotes.map(q => (
-      <div key={q.id} style={cardStyle}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div key={q.id} className="op-card">
+        <div className="op-card__row">
           <div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, marginBottom: 4 }}>{q.aircraft_type}</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Revenue: {fmt(q.price)}</div>
-             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
-              Created Date: {fmtDate(q.created_at)}
-            </div>
-
+            <div className="op-card__title op-card__title--sm">{q.aircraft_type}</div>
+            <div className="op-meta">Revenue: {fmt(q.price)}</div>
+            <div className="op-meta">Created Date: {fmtDate(q.created_at)}</div>
           </div>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', background: '#2E7D52', color: '#fff', padding: '4px 10px', borderRadius: 3 }}>Confirmed</span>
+          <span className="op-badge op-badge--confirmed">Confirmed</span>
         </div>
       </div>
     ))
   }
 
   function renderExpired() {
-    if (!expiredQueries.length) return <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.4)' }}>No expired queries.</div>
+    if (!expiredQueries.length) return <div className="op-empty">No expired queries.</div>
     return expiredQueries.map(q => (
-      <div key={q.id} style={{ ...cardStyle, opacity: 0.6 }}>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, marginBottom: 4 }}>{q.departure || '—'} → {q.destination || '—'}</div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{fmtDate(q.flight_date)} · Window closed</div>
+      <div key={q.id} className="op-card op-card--dim">
+        <div className="op-card__title op-card__title--sm">{q.departure || '—'} → {q.destination || '—'}</div>
+        <div className="op-meta">{fmtDate(q.flight_date)} · Window closed</div>
         <TimerBar createdAt={q.created_at} />
       </div>
     ))
@@ -297,21 +293,27 @@ function QueriesSection({ store }) {
 
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 400, marginBottom: 4 }}>Queries</h1>
-        <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid rgba(255,255,255,0.08)', marginTop: 20 }}>
+      <div className="op__hd">
+        <h1 className="op-h1">Queries</h1>
+        <div className="op-tabs">
           {tabs.map(t => (
-            <button key={t.key} style={tabStyle(tab === t.key)} onClick={() => setTab(t.key)}>
-              {t.label} <span style={{ marginLeft: 6, fontFamily: 'var(--font-mono)', fontSize: 10, background: 'rgba(255,255,255,0.08)', padding: '2px 6px', borderRadius: 10 }}>{t.count}</span>
+            <button key={t.key} className={`op-tab${tab === t.key ? ' is-active' : ''}`} onClick={() => setTab(t.key)}>
+              {t.label} <span className="op-tab__count">{t.count}</span>
             </button>
           ))}
         </div>
       </div>
       <div>
-        {tab === 'active' && renderActive()}
-        {tab === 'shared' && renderShared()}
-        {tab === 'confirmed' && renderConfirmed()}
-        {tab === 'expired' && renderExpired()}
+        {/* Until the first fetch lands, every tab is legitimately empty — showing
+            "No active queries" then would be a claim, not a fact. */}
+        {!queriesLoaded ? <SkeletonCards /> : (
+          <>
+            {tab === 'active' && renderActive()}
+            {tab === 'shared' && renderShared()}
+            {tab === 'confirmed' && renderConfirmed()}
+            {tab === 'expired' && renderExpired()}
+          </>
+        )}
       </div>
       {quoteModal && (
         <QuoteModal query={quoteModal} aircraft={aircraftList} operatorId={operator?.id} onClose={() => { setQuoteModal(null); loadAllData() }}
@@ -323,10 +325,13 @@ function QueriesSection({ store }) {
 
 // ── Fleet Section ──────────────────────────────────────────────────────────────
 function FleetSection({ store }) {
-  const { aircraftList, loadFleet, operator } = store
+  const { aircraftList, loadFleet, fleetLoaded } = store
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState({ aircraftType: '', registration: '', seatsAvailable: '' })
   const [loading, setLoading] = useState(false)
+  // The aircraft awaiting a delete confirmation, or null.
+  const [pendingRemove, setPendingRemove] = useState(null)
+  const [removing, setRemoving] = useState(false)
   const isOwner = store.isOwner()
 
   useEffect(() => { loadFleet() }, [])
@@ -345,44 +350,51 @@ function FleetSection({ store }) {
     } finally { setLoading(false) }
   }
 
-  async function removeAircraft(id) {
-    if (!confirm('Remove this aircraft?')) return
-    try { await fleetApi.delete(id); loadFleet(); showToast('Aircraft removed', 'success') } catch (err) { showToast(err.message, 'error') }
+  async function removeAircraft() {
+    setRemoving(true)
+    try {
+      await fleetApi.delete(pendingRemove.id)
+      loadFleet()
+      showToast('Aircraft removed', 'success')
+      setPendingRemove(null)
+    } catch (err) {
+      showToast(err.message, 'error')
+    } finally { setRemoving(false) }
   }
 
   const docStatus = (ac) => {
     const docs = [['C of R', ac.cor_expiry], ['C of A', ac.coa_expiry], ['ARC', ac.arc_expiry], ['Insurance', ac.insurance_expiry]]
     return docs.filter(([, e]) => e && daysUntil(e) !== null).map(([name, exp]) => {
       const d = daysUntil(exp)
-      return d <= 0 ? { name, label: '⚠ Expired', color: '#e24b4a' } : d <= 30 ? { name, label: `⚠ ${d}d left`, color: '#f59e0b' } : null
+      return d <= 0 ? { name, label: '⚠ Expired', color: 'var(--op-bad)' } : d <= 30 ? { name, label: `⚠ ${d}d left`, color: 'var(--op-warn)' } : null
     }).filter(Boolean)
   }
 
-  const inp = { width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, padding: '10px 12px', color: '#fff', fontFamily: 'var(--font-body)', fontSize: 13, outline: 'none', marginBottom: 12 }
-
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 400 }}>Fleet</h1>
-        {isOwner && <button onClick={() => setShowAdd(true)} style={{ background: 'rgba(23,176,214,0.15)', border: '1px solid rgba(23,176,214,0.4)', borderRadius: 4, padding: '9px 18px', color: '#17b0d6', fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer' }}>+ Add aircraft</button>}
+      <div className="op__hd op__hd--row">
+        <h1 className="op-h1">Fleet</h1>
+        {isOwner && <button className="op-btn op-btn--cyan" onClick={() => setShowAdd(true)}>+ Add aircraft</button>}
       </div>
 
-      {aircraftList.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.4)' }}>No aircraft added yet. {isOwner ? 'Add your fleet to start submitting quotes.' : 'Ask your admin to add aircraft.'}</div>
+      {!fleetLoaded ? <SkeletonTiles /> : aircraftList.length === 0 ? (
+        <div className="op-empty">No aircraft added yet. {isOwner ? 'Add your fleet to start submitting quotes.' : 'Ask your admin to add aircraft.'}</div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+        <div className="op-grid op-grid--fleet">
           {aircraftList.map(ac => {
             const warnings = docStatus(ac)
-            const statusColor = ac.doc_status === 'approved' ? '#4caf50' : ac.doc_status === 'rejected' ? '#e24b4a' : '#f59e0b'
+            const status = ac.doc_status === 'approved' ? ['ok', 'Approved']
+              : ac.doc_status === 'rejected' ? ['bad', 'Rejected']
+              : ['warn', 'Under review']
             return (
-              <div key={ac.id} style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${ac.doc_status === 'approved' ? 'rgba(255,255,255,0.08)' : 'rgba(245,158,11,0.3)'}`, borderRadius: 6, padding: '20px', position: 'relative' }}>
-                {isOwner && <button onClick={() => removeAircraft(ac.id)} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 16, cursor: 'pointer' }}>✕</button>}
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, marginBottom: 4 }}>{ac.aircraft_type}</div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>{ac.registration}</div>
-                {ac.seats_available && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>{ac.seats_available} seats</div>}
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', background: `${statusColor}20`, color: statusColor, padding: '3px 8px', borderRadius: 3 }}>{ac.doc_status === 'approved' ? 'Approved' : ac.doc_status === 'rejected' ? 'Rejected' : 'Under review'}</span>
+              <div key={ac.id} className={`op-ac${ac.doc_status === 'approved' ? '' : ' op-ac--pending'}`}>
+                {isOwner && <button className="op-x" onClick={() => setPendingRemove(ac)} aria-label={`Remove ${ac.aircraft_type} ${ac.registration}`}>✕</button>}
+                <div className="op-ac__type">{ac.aircraft_type}</div>
+                <div className="op-ac__reg">{ac.registration}</div>
+                {ac.seats_available && <div className="op-ac__seats">{ac.seats_available} seats</div>}
+                <span className={`op-badge op-badge--${status[0]}`}>{status[1]}</span>
                 {warnings.map(w => (
-                  <div key={w.name} style={{ fontSize: 11, color: w.color, marginTop: 6 }}>{w.name} — {w.label}</div>
+                  <div key={w.name} className="op-ac__warn" style={{ color: w.color }}>{w.name} — {w.label}</div>
                 ))}
               </div>
             )
@@ -392,29 +404,36 @@ function FleetSection({ store }) {
 
       {/* Add Aircraft Modal */}
       {showAdd && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 24 }} onClick={() => setShowAdd(false)}>
-          <div style={{ background: '#0f1a30', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, width: '100%', maxWidth: 440 }} onClick={e => e.stopPropagation()}>
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 20 }}>Add aircraft</div>
-              <button onClick={() => setShowAdd(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 20, cursor: 'pointer' }}>✕</button>
-            </div>
-            <div style={{ padding: 24 }}>
-              {[['Aircraft type', 'aircraftType', 'text', 'e.g. Citation XLS'], ['Registration (VT-XXX)', 'registration', 'text', 'e.g. VT-ABC'], ['Seats', 'seatsAvailable', 'number', 'e.g. 8']].map(([label, key, type, ph]) => (
-                <div key={key}>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>{label}</div>
-                  <input type={type} value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} placeholder={ph} style={inp} />
-                </div>
-              ))}
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>Note: All aircraft documents (C of R, C of A, ARC, Insurance) must be submitted for review before the aircraft can be used to submit quotes. Please contact SkyVayu admin to upload documents.</div>
-            </div>
-            <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowAdd(false)} style={{ padding: '9px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 4, color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)', fontSize: 11, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={addAircraft} disabled={loading} style={{ padding: '9px 18px', background: 'var(--gold)', border: 'none', borderRadius: 4, color: '#0c1324', fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600, opacity: loading ? 0.6 : 1 }}>
+        <Modal
+          title="Add aircraft"
+          size="sm"
+          onClose={() => setShowAdd(false)}
+          footer={
+            <>
+              <button className="op-btn op-btn--ghost" onClick={() => setShowAdd(false)}>Cancel</button>
+              <button className="op-btn op-btn--gold" onClick={addAircraft} disabled={loading}>
                 {loading ? 'Submitting…' : 'Submit for review'}
               </button>
+            </>
+          }>
+          {[['Aircraft type', 'aircraftType', 'text', 'e.g. Citation XLS'], ['Registration (VT-XXX)', 'registration', 'text', 'e.g. VT-ABC'], ['Seats', 'seatsAvailable', 'number', 'e.g. 8']].map(([label, key, type, ph]) => (
+            <div key={key} className="op-field">
+              <label className="op-lbl" htmlFor={`op-ac-${key}`}>{label}</label>
+              <input id={`op-ac-${key}`} className="op-inp" type={type} value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} placeholder={ph} />
             </div>
-          </div>
-        </div>
+          ))}
+          <div className="op-note">Note: All aircraft documents (C of R, C of A, ARC, Insurance) must be submitted for review before the aircraft can be used to submit quotes. Please contact SkyVayu admin to upload documents.</div>
+        </Modal>
+      )}
+
+      {pendingRemove && (
+        <ConfirmDialog
+          title="Remove aircraft"
+          message={`${pendingRemove.aircraft_type} (${pendingRemove.registration}) will be removed from your fleet and can no longer be quoted on.`}
+          confirmLabel="Remove aircraft"
+          busy={removing}
+          onConfirm={removeAircraft}
+          onCancel={() => setPendingRemove(null)} />
       )}
     </div>
   )
@@ -428,7 +447,6 @@ function EmployeesSection({ store }) {
   const [loading, setLoading] = useState(false)
 
   const employees = operatorUsers.filter(u => u.role === 'employee')
-  const inp = { width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, padding: '10px 12px', color: '#fff', fontFamily: 'var(--font-body)', fontSize: 13, outline: 'none', marginBottom: 12 }
 
   async function addEmployee() {
     if (!form.username || !form.password || !form.fullName) { showToast('Please fill in all fields', 'error'); return }
@@ -448,50 +466,49 @@ function EmployeesSection({ store }) {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 400 }}>Employees</h1>
-        <button onClick={() => setShowAdd(true)} style={{ background: 'rgba(23,176,214,0.15)', border: '1px solid rgba(23,176,214,0.4)', borderRadius: 4, padding: '9px 18px', color: '#17b0d6', fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer' }}>+ Add employee</button>
+      <div className="op__hd op__hd--row">
+        <h1 className="op-h1">Employees</h1>
+        <button className="op-btn op-btn--cyan" onClick={() => setShowAdd(true)}>+ Add employee</button>
       </div>
 
       {employees.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.4)' }}>No employees added. Create accounts for your sales team.</div>
+        <div className="op-empty">No employees added. Create accounts for your sales team.</div>
       ) : employees.map(e => (
-        <div key={e.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '16px 20px', marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 18, marginBottom: 4 }}>{e.full_name || e.username}</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>@{e.username}{e.email ? ' · ' + e.email : ''}</div>
-            {!e.is_approved && <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', background: 'rgba(245,158,11,0.15)', color: '#f59e0b', padding: '2px 6px', borderRadius: 3, marginTop: 4, display: 'inline-block' }}>Pending approval</span>}
+        <div key={e.id} className="op-card">
+          <div className="op-card__row">
+            <div>
+              <div className="op-card__title">{e.full_name || e.username}</div>
+              <div className="op-meta">@{e.username}{e.email ? ' · ' + e.email : ''}</div>
+              {!e.is_approved && <span className="op-badge op-badge--pending">Pending approval</span>}
+            </div>
+            <button className={`op-btn ${e.is_active ? 'op-btn--danger' : 'op-btn--go'}`} onClick={() => toggleActive(e.id, e.is_active)}>
+              {e.is_active ? 'Deactivate' : 'Reactivate'}
+            </button>
           </div>
-          <button onClick={() => toggleActive(e.id, e.is_active)} style={{ padding: '7px 14px', background: 'transparent', border: `1px solid ${e.is_active ? 'rgba(226,75,74,0.4)' : 'rgba(76,175,80,0.4)'}`, borderRadius: 4, color: e.is_active ? '#e24b4a' : '#4caf50', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer' }}>
-            {e.is_active ? 'Deactivate' : 'Reactivate'}
-          </button>
         </div>
       ))}
 
       {showAdd && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 24 }} onClick={() => setShowAdd(false)}>
-          <div style={{ background: '#0f1a30', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, width: '100%', maxWidth: 420 }} onClick={e => e.stopPropagation()}>
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between' }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 20 }}>Add employee</div>
-              <button onClick={() => setShowAdd(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 20, cursor: 'pointer' }}>✕</button>
-            </div>
-            <div style={{ padding: 24 }}>
-              {[['Full Name', 'fullName', 'text'], ['Email', 'email', 'email'], ['Username', 'username', 'text'], ['Password', 'password', 'password']].map(([label, key, type]) => (
-                <div key={key}>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>{label}</div>
-                  <input type={type} value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} style={inp} />
-                </div>
-              ))}
-              <div style={{ fontSize: 12, color: 'rgba(23,176,214,0.7)', background: 'rgba(23,176,214,0.08)', border: '1px solid rgba(23,176,214,0.2)', borderRadius: 4, padding: '10px 14px' }}>This employee will need SkyVayu approval before they can log in.</div>
-            </div>
-            <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowAdd(false)} style={{ padding: '9px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 4, color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)', fontSize: 11, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={addEmployee} disabled={loading} style={{ padding: '9px 18px', background: 'var(--gold)', border: 'none', borderRadius: 4, color: '#0c1324', fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600, opacity: loading ? 0.6 : 1 }}>
+        <Modal
+          title="Add employee"
+          size="xs"
+          onClose={() => setShowAdd(false)}
+          footer={
+            <>
+              <button className="op-btn op-btn--ghost" onClick={() => setShowAdd(false)}>Cancel</button>
+              <button className="op-btn op-btn--gold" onClick={addEmployee} disabled={loading}>
                 {loading ? 'Submitting…' : 'Submit for approval'}
               </button>
+            </>
+          }>
+          {[['Full Name', 'fullName', 'text'], ['Email', 'email', 'email'], ['Username', 'username', 'text'], ['Password', 'password', 'password']].map(([label, key, type]) => (
+            <div key={key} className="op-field">
+              <label className="op-lbl" htmlFor={`op-emp-${key}`}>{label}</label>
+              <input id={`op-emp-${key}`} className="op-inp" type={type} value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} />
             </div>
-          </div>
-        </div>
+          ))}
+          <div className="op-note op-note--info">This employee will need SkyVayu approval before they can log in.</div>
+        </Modal>
       )}
     </div>
   )
@@ -499,53 +516,50 @@ function EmployeesSection({ store }) {
 
 // ── Revenue Section ────────────────────────────────────────────────────────────
 function RevenueSection({ store }) {
-  const { confirmedQuotes, operatorUsers } = store
+  const { confirmedQuotes } = store
   const total = confirmedQuotes.reduce((a, q) => a + Number(q.price || 0), 0)
   const now = new Date()
   const thisMonth = confirmedQuotes.filter(q => { const d = new Date(q.created_at); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() }).reduce((a, q) => a + Number(q.price || 0), 0)
 
   return (
     <div>
-      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 400, marginBottom: 32 }}>Revenue</h1>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginBottom: 32 }}>
+      <h1 className="op-h1 op-h1--alone">Revenue</h1>
+      <div className="op-grid op-grid--3 op-panel-grid">
         {[['Total Revenue', fmt(total)], ['This Month', fmt(thisMonth)], ['Confirmed Bookings', confirmedQuotes.length]].map(([label, val]) => (
-          <div key={label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '24px 28px' }}>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>{label}</div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, color: 'var(--gold)' }}>{val}</div>
+          <div key={label} className="op-panel">
+            <div className="op-lbl op-panel__k">{label}</div>
+            <div className="op-panel__v">{val}</div>
           </div>
         ))}
       </div>
-      {confirmedQuotes.length === 0 && <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.4)' }}>No confirmed bookings yet. Revenue will appear here once you have confirmed bookings.</div>}
+      {confirmedQuotes.length === 0 && <div className="op-empty">No confirmed bookings yet. Revenue will appear here once you have confirmed bookings.</div>}
     </div>
   )
 }
 
 // ── Profile Section ────────────────────────────────────────────────────────────
 function ProfileSection({ store }) {
-  const { user, operator, logout } = store
-  const navigate = useNavigate()
-
-  async function handleLogout() { logout(); navigate('/operator') }
+  const { user, operator } = store
 
   return (
     <div>
-      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 400, marginBottom: 32 }}>Profile</h1>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '24px 28px' }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>Personal Details</div>
+      <h1 className="op-h1 op-h1--alone">Profile</h1>
+      <div className="op-grid op-grid--2">
+        <div className="op-panel">
+          <div className="op-lbl op-panel__hd">Personal Details</div>
           {[['Full Name', user?.fullName || user?.username], ['Username', user?.username], ['Email', user?.email], ['Role', user?.role === 'owner' ? 'Admin' : 'Employee']].map(([k, v]) => (
-            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: 14 }}>
-              <span style={{ color: 'rgba(255,255,255,0.5)' }}>{k}</span>
-              <span style={{ color: '#fff', fontWeight: 500 }}>{v || '—'}</span>
+            <div key={k} className="op-kv">
+              <span className="op-kv__k">{k}</span>
+              <span className="op-kv__v">{v || '—'}</span>
             </div>
           ))}
         </div>
-        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '24px 28px' }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>Company Details</div>
+        <div className="op-panel">
+          <div className="op-lbl op-panel__hd">Company Details</div>
           {[['Company Name', operator?.companyName], ['Aircraft Category', operator?.aircraftCategory], ['Approval Status', operator?.approvalStatus], ['AOP Expiry', operator?.aopExpiryDate || 'Not set']].map(([k, v]) => (
-            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: 14 }}>
-              <span style={{ color: 'rgba(255,255,255,0.5)' }}>{k}</span>
-              <span style={{ color: '#fff', fontWeight: 500 }}>{v || '—'}</span>
+            <div key={k} className="op-kv">
+              <span className="op-kv__k">{k}</span>
+              <span className="op-kv__v">{v || '—'}</span>
             </div>
           ))}
         </div>
@@ -559,6 +573,9 @@ export default function OperatorDashboard() {
   const navigate = useNavigate()
   const store = useOperatorStore()
   const [section, setSection] = useState('queries')
+  // Drives the off-canvas sidebar below 900px. Ignored on desktop, where the
+  // sidebar is always in flow.
+  const [navOpen, setNavOpen] = useState(false)
 
   useEffect(() => {
     const ok = store.init()
@@ -569,17 +586,47 @@ export default function OperatorDashboard() {
     if (store.operator) store.loadFleet()
   }, [store.operator])
 
-  if (!store.user) return <div style={{ minHeight: '100vh', background: '#0a0f1e', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)' }}>Loading…</div>
+  // Choosing a section closes the drawer, otherwise it stays open over the
+  // content the operator just asked for.
+  useEffect(() => { setNavOpen(false) }, [section])
+
+  useEffect(() => {
+    if (!navOpen) return
+    const onKey = (e) => { if (e.key === 'Escape') setNavOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [navOpen])
+
+  if (!store.user) return <div className="op-loading">Loading…</div>
 
   const isOwner = store.isOwner()
+  const current = navItemsFor(isOwner).find(i => i.key === section)
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0a0f1e' }}>
-      <Sidebar section={section} setSection={setSection} user={store.user} operator={store.operator} isOwner={isOwner} onLogout={() => { store.logout(); navigate('/operator') }} />
-      <main style={{ flex: 1, padding: '40px 48px', overflowY: 'auto' }}>
+    <div className="op">
+      <Sidebar
+        section={section}
+        setSection={setSection}
+        user={store.user}
+        operator={store.operator}
+        isOwner={isOwner}
+        open={navOpen}
+        onLogout={() => { store.logout(); navigate('/operator') }} />
+
+      {navOpen && <button className="op__scrim" aria-label="Close menu" onClick={() => setNavOpen(false)} />}
+
+      {/* Sibling of the main column, not a child of it: the bar has to span the
+          full width flush to the edges, and .op__main carries page padding.
+          Hidden entirely above 900px — see .op__bar in operator.css. */}
+      <div className="op__bar">
+        <button className="op__burger" onClick={() => setNavOpen(o => !o)} aria-label="Menu" aria-expanded={navOpen}>☰</button>
+        <span className="op__bar-title">{current?.label || 'Operator Portal'}</span>
+      </div>
+
+      <main className="op__main">
         {section === 'queries' && <QueriesSection store={store} />}
         {section === 'fleet' && <FleetSection store={store} />}
-        {section === 'roster' && <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, color: 'rgba(255,255,255,0.3)' }}>Roster — Coming soon</div>}
+        {section === 'roster' && <div className="op-soon">Roster — Coming soon</div>}
         {section === 'employees' && isOwner && <EmployeesSection store={store} />}
         {section === 'revenue' && isOwner && <RevenueSection store={store} />}
         {section === 'profile' && <ProfileSection store={store} />}

@@ -18,6 +18,13 @@ const useOperatorStore = create((set, get) => ({
   loading: false,
   currentClaimId: null,
 
+  // "Has the first fetch finished?", distinct from `loading`, which flips back
+  // and forth on every 10-second poll. The sections show a skeleton until these
+  // turn true; without them an empty list is indistinguishable from an
+  // unfetched one and the UI claims there is no work waiting.
+  queriesLoaded: false,
+  fleetLoaded: false,
+
   // ── Auth ────────────────────────────────────────────────────────────────────
   init: () => {
     const token = localStorage.getItem('sv_token')
@@ -46,7 +53,7 @@ const useOperatorStore = create((set, get) => ({
     localStorage.removeItem('sv_refresh_token')
     localStorage.removeItem('sv_op_user')
     localStorage.removeItem('sv_operator')
-    set({ user: null, operator: null, token: null, activeQueries: [], sharedQuotes: [], confirmedQuotes: [], expiredQueries: [], aircraftList: [], operatorUsers: [], activeClaims: [] })
+    set({ user: null, operator: null, token: null, activeQueries: [], sharedQuotes: [], confirmedQuotes: [], expiredQueries: [], aircraftList: [], operatorUsers: [], activeClaims: [], queriesLoaded: false, fleetLoaded: false })
   },
 
   isOwner: () => get().user?.role === 'owner',
@@ -80,16 +87,26 @@ const useOperatorStore = create((set, get) => ({
         expiredQueries: expired,
         operatorUsers: users,
         loading: false,
+        queriesLoaded: true,
       })
     } catch (e) {
       console.error('loadAllData error:', e)
-      set({ loading: false })
+      // Marked loaded on failure too: a failed fetch should fall through to the
+      // empty state, not leave a skeleton shimmering forever.
+      set({ loading: false, queriesLoaded: true })
     }
   },
 
   loadFleet: async () => {
-    const res = await fleetApi.list()
-    set({ aircraftList: res.data || [] })
+    try {
+      const res = await fleetApi.list()
+      set({ aircraftList: res.data || [], fleetLoaded: true })
+    } catch (e) {
+      // Previously uncaught, so a fleet request that failed surfaced only as an
+      // unhandled rejection in the console.
+      console.error('loadFleet error:', e)
+      set({ fleetLoaded: true })
+    }
   },
 
   // ── Quote claim ──────────────────────────────────────────────────────────────

@@ -1,0 +1,701 @@
+/* Operator portal.
+   Scoped to .op — everything here is prefixed so it cannot leak into the
+   customer site, which runs on the newer brass/oklch palette. This portal stays
+   on the original navy/gold tokens declared in index.css, deliberately: the
+   comment there marks them as the palette for the pages where money and
+   compliance data are shown, and a marketing restyle must not reach them.
+
+   Before this file the whole dashboard was inline style objects. That made
+   :hover, :focus and media queries impossible to express, so the portal had no
+   interactive feedback and did not respond to viewport width at all — an
+   operator has 60 minutes to answer a query and could not do it from a phone. */
+
+.op {
+  --op-bg: #0a0f1e;
+  --op-panel: #0f1a30;
+  --op-line: rgba(255, 255, 255, 0.06);
+  --op-line-2: rgba(255, 255, 255, 0.08);
+  --op-fill: rgba(255, 255, 255, 0.03);
+  --op-fill-2: rgba(255, 255, 255, 0.06);
+  --op-dim: rgba(255, 255, 255, 0.4);
+  --op-dim-2: rgba(255, 255, 255, 0.5);
+  --op-ok: #4caf50;
+  --op-warn: #f59e0b;
+  --op-bad: #e24b4a;
+  --op-confirmed: #2e7d52;
+  --op-sidebar-w: 220px;
+
+  display: flex;
+  min-height: 100vh;
+  background: var(--op-bg);
+}
+
+/* ── Shared atoms ─────────────────────────────────────────────────────────── */
+
+/* The small uppercase mono caption used above nearly every field and stat.
+   It appeared ten times as a duplicated inline object. */
+.op-lbl {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--op-dim-2);
+  margin-bottom: 6px;
+}
+
+.op-h1 {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 400;
+}
+/* Sections without tabs under the heading need the gap the tab row would
+   otherwise have provided. */
+.op-h1--alone { margin-bottom: 32px; }
+
+/* Placeholder for sections that are not built yet. */
+.op-soon {
+  font-family: var(--font-display);
+  font-size: 32px;
+  color: var(--white-30);
+}
+
+.op-meta { font-size: 12px; color: var(--op-dim-2); }
+
+.op-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--op-dim);
+}
+
+.op-card {
+  background: var(--op-fill);
+  border: 1px solid var(--op-line-2);
+  border-radius: 6px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+}
+
+.op-card__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.op-card__row--top { align-items: flex-start; }
+
+/* Expired queries are kept legible but visibly past. */
+.op-card--dim { opacity: 0.6; }
+
+.op-card__title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+.op-card__title--sm { font-size: 16px; }
+
+.op-price {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+/* Buttons. Every variant shares the mono uppercase face; only the colours and
+   the border differ, so the modifiers stay thin. */
+.op-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-radius: 4px;
+  padding: 9px 18px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: background 0.18s, border-color 0.18s, color 0.18s, opacity 0.18s;
+  white-space: nowrap;
+}
+.op-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.op-btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+.op-btn--gold {
+  background: var(--gold);
+  color: #0c1324;
+  font-weight: 600;
+}
+.op-btn--gold:hover:not(:disabled) { background: var(--gold-light); }
+
+.op-btn--cyan {
+  background: rgba(23, 176, 214, 0.15);
+  border-color: rgba(23, 176, 214, 0.4);
+  color: var(--cyan);
+}
+.op-btn--cyan:hover:not(:disabled) {
+  background: rgba(23, 176, 214, 0.28);
+  border-color: rgba(23, 176, 214, 0.7);
+}
+
+.op-btn--ghost {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.6);
+}
+.op-btn--ghost:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+.op-btn--danger { border-color: rgba(226, 75, 74, 0.4); color: var(--op-bad); font-size: 10px; padding: 7px 14px; }
+.op-btn--danger:hover:not(:disabled) { background: rgba(226, 75, 74, 0.12); border-color: var(--op-bad); }
+
+/* Confirming a destructive action — filled, so it reads as the committed
+   choice rather than another outline among outlines. */
+.op-btn--danger-solid { background: var(--op-bad); color: #fff; font-weight: 600; }
+.op-btn--danger-solid:hover:not(:disabled) { background: #ef5f5e; }
+
+.op-btn--go { border-color: rgba(76, 175, 80, 0.4); color: var(--op-ok); font-size: 10px; padding: 7px 14px; }
+.op-btn--go:hover:not(:disabled) { background: rgba(76, 175, 80, 0.12); border-color: var(--op-ok); }
+
+/* Inputs. Previously three separate copies of the same object; the focus ring
+   is new — inline styles could not express :focus at all. */
+.op-inp {
+  width: 100%;
+  background: var(--op-fill-2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 10px 12px;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.18s, background 0.18s;
+}
+.op-inp::placeholder { color: rgba(255, 255, 255, 0.3); }
+.op-inp:hover { border-color: rgba(255, 255, 255, 0.18); }
+.op-inp:focus {
+  border-color: var(--cyan);
+  background: rgba(23, 176, 214, 0.06);
+}
+/* The native picker glyph is black-on-dark by default and effectively invisible. */
+.op-inp[type='datetime-local']::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; cursor: pointer; }
+.op-inp[type='datetime-local']::-webkit-calendar-picker-indicator:hover { opacity: 0.9; }
+
+.op-field { margin-bottom: 12px; }
+
+/* Multi-line variant of .op-inp — the "notes to client" box. */
+.op-inp--area { height: 64px; resize: vertical; }
+
+.op-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 3px;
+}
+.op-badge--confirmed { background: var(--op-confirmed); color: #fff; padding: 4px 10px; }
+.op-badge--pending { background: rgba(245, 158, 11, 0.15); color: var(--op-warn); margin-top: 4px; }
+/* Aircraft document review states. */
+.op-badge--ok { background: rgba(76, 175, 80, 0.13); color: var(--op-ok); }
+.op-badge--warn { background: rgba(245, 158, 11, 0.13); color: var(--op-warn); }
+.op-badge--bad { background: rgba(226, 75, 74, 0.13); color: var(--op-bad); }
+
+/* ── Sidebar ──────────────────────────────────────────────────────────────── */
+.op__side {
+  width: var(--op-sidebar-w);
+  flex-shrink: 0;
+  background: var(--op-bg);
+  border-right: 1px solid var(--op-line);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.op__brand { padding: 24px 20px 20px; border-bottom: 1px solid var(--op-line); }
+.op__brand-name { font-family: var(--font-display); font-size: 22px; color: var(--gold); }
+.op__brand-sub {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--white-30);
+  margin-top: 4px;
+}
+
+.op__me {
+  width: 100%;
+  text-align: left;
+  padding: 16px 20px;
+  border: none;
+  border-bottom: 1px solid var(--op-line);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: background 0.18s;
+  font-family: inherit;
+}
+.op__me:hover { background: rgba(255, 255, 255, 0.03); }
+.op__me:focus-visible { outline: 2px solid var(--cyan); outline-offset: -2px; }
+
+.op__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.op__me-txt { min-width: 0; }
+.op__me-name { font-size: 13px; font-weight: 500; color: #fff; }
+.op__me-org { font-size: 11px; color: var(--op-dim); }
+.op__me-name,
+.op__me-org { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.op__nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+
+.op__nav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  cursor: pointer;
+  color: var(--op-dim-2);
+  background: transparent;
+  border: none;
+  border-left: 2px solid transparent;
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  transition: color 0.18s, background 0.18s, border-color 0.18s;
+}
+.op__nav-item:hover { color: #fff; background: rgba(255, 255, 255, 0.03); }
+.op__nav-item:focus-visible { outline: 2px solid var(--cyan); outline-offset: -2px; }
+.op__nav-item.is-active {
+  color: var(--gold);
+  background: rgba(251, 191, 36, 0.06);
+  border-left-color: var(--gold);
+}
+/* Stroke icons inherit the nav item's colour, so they pick up the gold active
+   state and the white hover state without any per-state rules. */
+.op-icon {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.op__side-foot { padding: 16px 20px; border-top: 1px solid var(--op-line); }
+.op__signout {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--op-line-2);
+  border-radius: 4px;
+  padding: 9px;
+  color: var(--op-dim-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+}
+.op__signout:hover { background: rgba(226, 75, 74, 0.12); border-color: rgba(226, 75, 74, 0.4); color: var(--op-bad); }
+.op__signout:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+/* ── Main column ──────────────────────────────────────────────────────────── */
+.op__main {
+  flex: 1;
+  min-width: 0;
+  padding: 40px 48px;
+  overflow-y: auto;
+}
+
+/* Mobile-only top bar. Hidden on desktop, where the sidebar is always present. */
+.op__bar { display: none; }
+
+.op__scrim { display: none; }
+
+.op__hd { margin-bottom: 24px; }
+.op__hd--row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────────────────── */
+.op-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--op-line-2);
+  margin-top: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.op-tabs::-webkit-scrollbar { display: none; }
+
+.op-tab {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--op-dim);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.18s, background 0.18s, border-color 0.18s;
+}
+.op-tab:hover { color: rgba(255, 255, 255, 0.75); }
+.op-tab:focus-visible { outline: 2px solid var(--cyan); outline-offset: -2px; }
+.op-tab.is-active {
+  background: rgba(251, 191, 36, 0.1);
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+.op-tab__count {
+  margin-left: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: var(--op-line-2);
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+/* ── Query timer ──────────────────────────────────────────────────────────── */
+.op-timer { margin-top: 10px; }
+.op-timer__row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  margin-bottom: 4px;
+}
+.op-timer__track { height: 3px; background: var(--op-line-2); border-radius: 2px; }
+.op-timer__fill { height: 100%; border-radius: 2px; transition: width 1s linear; }
+
+/* ── Grids ────────────────────────────────────────────────────────────────── */
+.op-grid { display: grid; gap: 20px; }
+.op-grid--3 { grid-template-columns: repeat(3, 1fr); }
+.op-grid--2 { grid-template-columns: repeat(2, 1fr); }
+.op-grid--fleet { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.op-grid--charges { grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* ── Stat / detail panels ─────────────────────────────────────────────────── */
+.op-panel {
+  background: var(--op-fill);
+  border: 1px solid var(--op-line-2);
+  border-radius: 6px;
+  padding: 24px 28px;
+}
+.op-panel__k { margin-bottom: 12px; }
+.op-panel__hd { margin-bottom: 16px; }
+.op-panel__v { font-family: var(--font-display); font-size: 32px; color: var(--gold); }
+.op-panel-grid { margin-bottom: 32px; }
+
+.op-kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+.op-kv__k { color: var(--op-dim-2); }
+.op-kv__v { color: #fff; font-weight: 500; text-align: right; word-break: break-word; }
+
+/* ── Fleet ────────────────────────────────────────────────────────────────── */
+.op-ac {
+  background: var(--op-fill);
+  border: 1px solid var(--op-line-2);
+  border-radius: 6px;
+  padding: 20px;
+  position: relative;
+  transition: border-color 0.18s, background 0.18s;
+}
+.op-ac:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.16); }
+.op-ac--pending { border-color: rgba(245, 158, 11, 0.3); }
+.op-ac__type { font-family: var(--font-display); font-size: 20px; margin-bottom: 4px; padding-right: 24px; }
+.op-ac__reg { font-family: var(--font-mono); font-size: 12px; color: var(--op-dim-2); margin-bottom: 8px; }
+.op-ac__seats { font-size: 12px; color: var(--op-dim); margin-bottom: 8px; }
+.op-ac__warn { font-size: 11px; margin-top: 6px; }
+
+.op-x {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--white-30);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.18s, background 0.18s;
+}
+.op-x:hover { color: var(--op-bad); background: rgba(226, 75, 74, 0.12); }
+.op-x:focus-visible { outline: 2px solid var(--cyan); outline-offset: 1px; }
+
+/* ── Modal ────────────────────────────────────────────────────────────────── */
+.op-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 24px;
+  overflow-y: auto;
+}
+.op-modal__box {
+  background: var(--op-panel);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 560px;
+  margin: auto;
+}
+/* The box takes focus when a dialog has no fields of its own, so the focus trap
+   has somewhere to start; it is a scroll container, not a control, so it shows
+   no ring. */
+.op-modal__box:focus { outline: none; }
+.op-modal__box--sm { max-width: 440px; }
+.op-modal__box--xs { max-width: 420px; }
+
+.op-modal__hd {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--op-line-2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.op-modal__title { font-family: var(--font-display); font-size: 20px; }
+.op-modal__x {
+  background: none;
+  border: none;
+  color: var(--op-dim);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.18s, background 0.18s;
+}
+.op-modal__x:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+.op-modal__x:focus-visible { outline: 2px solid var(--cyan); outline-offset: 1px; }
+
+.op-modal__body { padding: 24px; }
+.op-modal__ft {
+  padding: 16px 24px;
+  border-top: 1px solid var(--op-line-2);
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* Boxed read-only blocks inside modals — the query summary, the live-bid
+   readout and the price breakdown all share this surface. */
+.op-box {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-size: 13px;
+}
+.op-box--outlined { background: var(--op-fill); border: 1px solid var(--op-line-2); }
+.op-box--query { color: rgba(255, 255, 255, 0.6); }
+.op-box--query strong { color: #fff; }
+
+/* Vertical rhythm between blocks inside a modal body. */
+.op-mb-lg { margin-bottom: 20px; }
+.op-mb { margin-bottom: 16px; }
+.op-lbl--tight { margin-bottom: 8px; }
+
+/* "You are outbid" / "You have the lowest bid" line. Colour is set inline
+   because it depends on live bid data. */
+.op-bid-hint { font-size: 11px; margin-top: 4px; font-family: var(--font-mono); }
+
+.op-sum { display: flex; justify-content: space-between; color: rgba(255, 255, 255, 0.6); margin-bottom: 4px; }
+.op-sum--total {
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 18px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--op-line-2);
+}
+
+.op-note {
+  font-size: 12px;
+  color: var(--op-dim);
+  margin-bottom: 16px;
+}
+.op-note--info {
+  color: rgba(23, 176, 214, 0.7);
+  background: rgba(23, 176, 214, 0.08);
+  border: 1px solid rgba(23, 176, 214, 0.2);
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin-bottom: 0;
+}
+
+/* The pre-auth splash renders *outside* .op, so it cannot use the --op-*
+   custom properties declared there — they would resolve to nothing and leave
+   the screen on the body background with full-strength white text. Literal
+   values on purpose. */
+.op-confirm__msg { font-size: 14px; line-height: 1.6; color: rgba(255, 255, 255, 0.7); }
+
+/* ── Skeletons ────────────────────────────────────────────────────────────── */
+.op-skel {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.09) 37%,
+    rgba(255, 255, 255, 0.04) 63%
+  );
+  background-size: 400% 100%;
+  animation: op-shimmer 1.4s ease infinite;
+  border-radius: 3px;
+}
+.op-skel-grow { flex: 1; }
+.op-skel--title { height: 18px; width: 45%; margin-bottom: 10px; }
+.op-skel--line { height: 12px; width: 70%; }
+.op-skel--btn { height: 34px; width: 120px; border-radius: 4px; flex-shrink: 0; }
+.op-skel--bar { height: 3px; width: 100%; margin-top: 18px; }
+.op-skel--pill { height: 16px; width: 90px; margin-top: 12px; }
+
+@keyframes op-shimmer {
+  from { background-position: 100% 50%; }
+  to { background-position: 0 50%; }
+}
+
+.op-loading {
+  min-height: 100vh;
+  background: #0a0f1e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────────
+   Below 900px the sidebar becomes an off-canvas drawer behind a top bar. An
+   operator answering a query on a phone is the normal case, not the exception:
+   the bidding window is 60 minutes, so the portal has to work away from a desk. */
+@media (max-width: 900px) {
+  .op { flex-direction: column; }
+
+  .op__side {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100%;
+    z-index: 120;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0, 0, 0.2, 1);
+    border-right: 1px solid var(--op-line-2);
+  }
+  .op__side.is-open { transform: translateX(0); }
+
+  .op__scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 110;
+    border: none;
+    cursor: pointer;
+  }
+
+  .op__bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--op-bg);
+    border-bottom: 1px solid var(--op-line);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .op__burger {
+    background: none;
+    border: 1px solid var(--op-line-2);
+    border-radius: 4px;
+    color: #fff;
+    font-size: 16px;
+    line-height: 1;
+    padding: 7px 11px;
+    cursor: pointer;
+  }
+  .op__burger:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  .op__bar-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  .op__main { padding: 24px 20px 48px; }
+
+  .op-grid--3,
+  .op-grid--2 { grid-template-columns: 1fr; gap: 14px; }
+  .op-grid--fleet { grid-template-columns: 1fr; }
+
+  .op-h1 { font-size: 26px; }
+  .op-panel { padding: 20px; }
+  .op-panel__v { font-size: 26px; }
+}
+
+@media (max-width: 560px) {
+  .op__main { padding: 20px 14px 40px; }
+  .op-card { padding: 14px 16px; }
+
+  /* The route and its action stack rather than squeezing onto one line. */
+  .op-card__row { flex-direction: column; align-items: stretch; gap: 12px; }
+  .op-card__row .op-btn { width: 100%; }
+  .op-price { text-align: left; }
+  /* Stretch suits the buttons, but a status pill has to stay pill-width
+     instead of becoming a full-bleed bar. */
+  .op-card__row > .op-badge { align-self: flex-start; }
+
+  .op-grid--charges { grid-template-columns: 1fr; }
+
+  .op-modal { padding: 12px; align-items: flex-start; }
+  .op-modal__body { padding: 18px 16px; }
+  .op-modal__hd { padding: 16px; }
+  .op-modal__ft { padding: 14px 16px; }
+  .op-modal__ft .op-btn { flex: 1; }
+
+  .op-h1 { font-size: 23px; }
+  .op-tab { padding: 10px 12px; font-size: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .op__side,
+  .op-timer__fill { transition: none; }
+  /* The shimmer still needs to read as "loading", so it holds a flat mid tone
+     rather than disappearing into the card background. */
+  .op-skel { animation: none; background: rgba(255, 255, 255, 0.07); }
+}
