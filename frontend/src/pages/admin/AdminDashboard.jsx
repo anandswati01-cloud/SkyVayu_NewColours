@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../services/supabase'
 import { showToast } from '../../components/ui/Toast'
 import { adminApi } from '../../services/api'
+import logo from '../../assets/skyvayu-logo.png'
 
 // ── Admin data access ──────────────────────────────────────────────────────────
 // Everything goes through /api/admin/*, which verifies profiles.is_admin
@@ -103,8 +104,14 @@ function Sidebar({ section, setSection, onLogout, counts }) {
   return (
     <aside style={{ width: 248, flexShrink: 0, background: 'rgba(15,26,48,0.65)', backdropFilter: 'blur(16px)', borderRight: '0.5px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0 }}>
       <div style={{ padding: '26px 22px 22px', borderBottom: '0.5px solid rgba(255,255,255,0.1)' }}>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontStyle: 'italic', color: 'var(--gold)' }}>SkyVayu</div>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: 2, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginTop: 4 }}>Super Admin</div>
+        {/* fit-content wrapper so "Super Admin" centres on the mark rather than
+            on the full sidebar width. */}
+        <div style={{ width: 'fit-content' }}>
+          <img src={logo} alt="SkyVayu" style={{ height: 34, width: 'auto', display: 'block', marginInline: 'auto' }} />
+          {/* text-indent offsets the trailing gap letter-spacing leaves after
+              the last character, which otherwise drags centred text left. */}
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: 2, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginTop: 4, textAlign: 'center', textIndent: 2 }}>Super Admin</div>
+        </div>
       </div>
       <nav style={{ flex: 1, padding: '8px 12px' }}>
         {nav.map(({ key, label, badge }) => (
@@ -1028,7 +1035,7 @@ export default function AdminDashboard() {
         {/* Top bar */}
         <div style={{ background: 'rgba(12,19,36,0.45)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.1)', padding: '0 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 52, position: 'sticky', top: 0, zIndex: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontStyle: 'italic', color: 'var(--gold)' }}>SkyVayu</span>
+            <img src={logo} alt="SkyVayu" style={{ height: 22, width: 'auto', display: 'block' }} />
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '1.5px', textTransform: 'uppercase', background: 'rgba(22,32,64,0.55)', border: '0.5px solid rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: 3, color: 'rgba(255,255,255,0.4)' }}>Super Admin</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>

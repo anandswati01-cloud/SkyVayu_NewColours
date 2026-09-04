@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../services/supabase'
 import { adminApi } from '../../services/api'
+import logo from '../../assets/skyvayu-logo.png'
 
 const ADMIN_EMAIL = 'anandswati01@gmail.com'
 
@@ -57,7 +58,9 @@ export default function AdminLogin() {
     bg: { position: 'absolute', inset: 0, backgroundImage: "url('/airplane.png')", backgroundSize: 'cover', backgroundPosition: '50% 40%', filter: 'brightness(0.35)', zIndex: 0 },
     overlay: { position: 'absolute', inset: 0, background: 'linear-gradient(rgba(12,19,36,0.5) 0%, rgba(12,19,36,0.65) 55%, #0c1324 100%)', zIndex: 1 },
     box: { background: 'rgba(12,19,36,0.72)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '0.5px solid rgba(251,191,36,0.18)', borderRadius: 12, padding: '36px 36px', width: '100%', maxWidth: 380, position: 'relative', zIndex: 2, boxShadow: '0 8px 48px rgba(0,0,0,0.5)' },
-    logo: { fontFamily: 'var(--font-display)', fontSize: 26, fontStyle: 'italic', color: 'var(--gold)', textAlign: 'center', marginBottom: 6 },
+    // The card sits on a near-opaque panel over the background photo, so the
+    // white mark holds its edge without the drop shadow the site header needs.
+    mark: { height: 40, width: 'auto', display: 'block', margin: '0 auto 6px' },
     tag: { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginBottom: 28 },
     label: { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', display: 'block', marginBottom: 7 },
     input: { width: '100%', height: 44, padding: '0 14px', background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.3)', borderRadius: 8, color: '#fff', fontSize: 14, fontFamily: 'var(--font-body)', outline: 'none' },
@@ -70,7 +73,7 @@ export default function AdminLogin() {
       <div style={s.bg} />
       <div style={s.overlay} />
       <div style={s.box}>
-        <div style={s.logo}>SkyVayu</div>
+        <img src={logo} alt="SkyVayu" style={s.mark} />
         <div style={s.tag}>Super Admin Panel</div>
 
         {error && <div style={s.err}>{error}</div>}
