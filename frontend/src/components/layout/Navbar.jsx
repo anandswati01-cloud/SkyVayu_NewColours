@@ -4,7 +4,7 @@ import useAuthStore from '../../store/authStore'
 import { signInWithGoogle, signInAsDevUser } from '../../services/supabase'
 import { showToast } from '../ui/Toast'
 import OperatorLoginForm from '../../pages/operator/OperatorLoginForm'
-import logo from '../../assets/skyvayu-logo.png'
+import logo from '../../assets/skyvayu-wordmark.png'
 import './layout.css'
 
 // The header mirrors the previous charter site. These three are plain
@@ -49,13 +49,20 @@ export default function Navbar() {
     return () => window.removeEventListener('keydown', onKey)
   }, [operatorOpen])
 
-  const displayName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || ''
-
-  // Operator sign-in is a home-page-only entry point, parked on the right of the
-  // bar. Inner pages drop it so they carry one unambiguous sign-in affordance —
-  // Member Access, in the links row after "About Us". Operators still reach
-  // /operator from the footer, which renders on every page.
+  // Operator Login is offered on the home page only; inner pages keep one
+  // unambiguous action instead. It does not become unreachable — the footer
+  // links /operator from every page.
   const isHome = location.pathname === '/'
+
+  const displayName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || ''
+  // The name is the link to the profile, so it comes down on the profile itself
+  // — the page already opens with "Welcome {name}", and a link to the page you
+  // are standing on is not navigation.
+  const isProfile = location.pathname === '/profile'
+
+  // A signed-in customer is not an operator, so the operator entry point comes
+  // down once they have a session rather than sitting beside their own name.
+  const showOperatorLogin = isHome && !user
 
   return (
     <>
@@ -86,8 +93,7 @@ export default function Navbar() {
           <div className="nav__r">
             {user ? (
               <div className="nav__user">
-                <Link to="/profile" className="nav__si">{displayName}</Link>
-                <Link to="/profile#tab-active" className="nav__si">My Bookings</Link>
+                {!isProfile && <Link to="/profile" className="nav__si">{displayName}</Link>}
                 <button className="nav__si" onClick={() => signOut()}>Sign out</button>
               </div>
             ) : (
@@ -104,8 +110,8 @@ export default function Navbar() {
                 </button>
               )
             )}
-            {isHome && (
-              <button className="nav__si" onClick={() => setOperatorOpen(true)}>Operator Login</button>
+            {showOperatorLogin && (
+              <button className="nav__op" onClick={() => setOperatorOpen(true)}>Operator Login</button>
             )}
             <button className="nav__burger" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
               {menuOpen ? '✕' : '☰'}
@@ -126,10 +132,9 @@ export default function Navbar() {
             <Link key={to} to={to} onClick={() => setMenuOpen(false)}>{label}</Link>
           ))}
           {!user && <button onClick={signInWithGoogle}>Member Access</button>}
-          {isHome && (
-            <button onClick={() => { setMenuOpen(false); setOperatorOpen(true) }}>Operator Login</button>
+          {showOperatorLogin && (
+            <button className="nav__op" onClick={() => { setMenuOpen(false); setOperatorOpen(true) }}>Operator Login</button>
           )}
-          {user && <Link to="/profile">My Bookings</Link>}
         </div>
       )}
 

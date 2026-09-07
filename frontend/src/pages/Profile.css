@@ -6,11 +6,11 @@
 .pf { min-height: 100vh; background: var(--navy); padding-top: 72px; }
 .pf__i { max-width: 900px; margin: 0 auto; padding: 48px clamp(20px, 5vw, 48px) 80px; }
 
-.pf__title { font-family: var(--font-display); font-size: clamp(30px, 5vw, 42px); font-weight: 400; margin-bottom: 40px; }
-
-.pf__hd { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 40px 0 14px; padding-bottom: 12px; border-bottom: 1px solid var(--white-10); }
-.pf__hd:first-of-type { margin-top: 0; }
-.pf__sec { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--white-60); }
+.pf__title { font-family: var(--font-display); font-size: clamp(30px, 5vw, 40px); font-weight: 400; margin-bottom: 40px;font-weight:bold; }
+/* --brass, not this page's --gold: the name is meant to match the Operator
+   Login button in the header exactly. It comes from the v1 marketing palette,
+   which is the one deliberate crossing between the two token sets here. */
+.pf__name { color: var(--brass); }
 
 /* KYC badge */
 .kyc-badge { display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
@@ -22,8 +22,83 @@
 .kyc-badge.none { background: rgba(255,255,255,.05); color: var(--white-30); border: 1px solid var(--white-10); }
 .kyc-badge.none .dot { background: var(--white-30); }
 
-/* Card */
-.pf__card { background: var(--navy-mid); border: 1px solid var(--white-10); border-radius: 4px; padding: 32px 36px; }
+/* ── Section tiles ────────────────────────────────────────────────────────
+   Three boxes on one row. They are the navigation; the section they select
+   opens full width underneath, because a two-column form and a booking row do
+   not fit inside a third of the page. */
+.tiles {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 16px; margin-bottom: 26px;
+}
+.tile {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+  min-height: 168px; padding: 26px 24px;
+  background: var(--navy-mid); border: 1px solid var(--white-10);
+  border-radius: 6px; cursor: pointer; text-align: left; color: inherit;
+  font: inherit; position: relative;
+  transition: border-color .2s, background .2s, transform .2s;
+}
+.tile:hover { border-color: var(--white-30); background: var(--navy-light); transform: translateY(-2px); }
+.tile:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.tile.on { border-color: var(--gold); background: var(--navy-light); }
+
+/* The pointer down to the detail area, so the open section reads as belonging
+   to the tile that opened it. */
+.tile.on::after {
+  content: ''; position: absolute; left: 50%; bottom: -9px;
+  width: 14px; height: 14px; background: var(--navy-light);
+  border-right: 1px solid var(--gold); border-bottom: 1px solid var(--gold);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.tile__ic {
+  display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,.05); border: 1px solid var(--white-10);
+  color: var(--white-60); margin-bottom: 4px; transition: color .2s, border-color .2s, background .2s;
+}
+.tile.on .tile__ic { color: var(--gold); border-color: rgba(251,191,36,.4); background: rgba(251,191,36,.1); }
+.tile__ic svg {
+  width: 21px; height: 21px; fill: none; stroke: currentColor;
+  stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+}
+.tile__t {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.8px;
+  text-transform: uppercase; color: var(--white); line-height: 1.5;
+}
+.tile__m { margin-top: auto; font-size: 12.5px; color: var(--white-60); font-family: var(--font-body); }
+
+/* Detail area — one open section at a time. */
+.pf__detail:empty { display: none; }
+.pnl__b {
+  background: var(--navy-mid); border: 1px solid var(--white-10);
+  border-radius: 6px; padding: 30px 32px 32px;
+}
+
+/* ── Pagination ───────────────────────────────────────────────────────── */
+.pg {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--white-10);
+}
+.pg__info { font-family: var(--font-mono); font-size: 11px; color: var(--white-30); letter-spacing: .5px; }
+.pg__ctl { display: flex; align-items: center; gap: 6px; }
+.pg__b {
+  min-width: 32px; height: 32px; padding: 0 9px;
+  background: transparent; border: 1px solid var(--white-10); border-radius: 3px;
+  color: var(--white-60); font-family: var(--font-mono); font-size: 11px;
+  cursor: pointer; transition: border-color .2s, color .2s, background .2s;
+  font-variant-numeric: tabular-nums;
+}
+.pg__b:hover:not(:disabled):not(.on) { border-color: var(--white-30); color: var(--white); }
+.pg__b:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.pg__b:disabled { opacity: .35; cursor: not-allowed; }
+.pg__b.on { background: var(--gold); border-color: var(--gold); color: var(--navy); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tile { transition: none; }
+  .tile:hover { transform: none; }
+}
 
 /* Fields */
 .pf__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; }
@@ -73,11 +148,6 @@
 .doc-row__btn input { display: none; }
 .pf__hint { font-size: 11px; color: var(--white-60); margin-top: 10px; }
 
-/* Sign out */
-.pf__signout { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--white-10); }
-.pf__signout button { background: none; border: none; cursor: pointer; font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--white-30); padding: 0; transition: color .2s; }
-.pf__signout button:hover { color: var(--white-60); }
-
 /* Bookings */
 .pf__tabs { display: flex; border-bottom: 1px solid var(--white-10); margin-bottom: 20px; }
 .pf__tab {
@@ -112,9 +182,28 @@
 .pf__empty { padding: 60px 0; text-align: center; color: var(--white-30); font-size: 14px; }
 .pf__empty .ic { font-size: 2rem; margin-bottom: 12px; opacity: .4; }
 
+/* Three across needs the width; two, then one, as it runs out. */
+@media (max-width: 860px) {
+  .tiles { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 560px) {
+  .tiles { grid-template-columns: 1fr; gap: 12px; }
+  .tile { min-height: 0; flex-direction: row; align-items: center; gap: 14px; padding: 16px 18px; }
+  .tile__ic { width: 38px; height: 38px; margin-bottom: 0; flex-shrink: 0; }
+  .tile__t { flex: 1; }
+  .tile__m { margin-top: 0; text-align: right; }
+  /* The arrow assumes a tile above the detail area; stacked, it points at the
+     next tile instead. */
+  .tile.on::after { display: none; }
+}
+
 @media (max-width: 640px) {
   .pf__grid { grid-template-columns: 1fr; }
-  .pf__card { padding: 24px 20px; }
+
+  .pnl__b { padding: 22px 18px 24px; }
   .bk { flex-direction: column; align-items: flex-start; }
   .bk__r { text-align: left; }
+  /* Range readout above the controls rather than squeezed beside them. */
+  .pg { flex-direction: column; align-items: flex-start; gap: 12px; }
 }

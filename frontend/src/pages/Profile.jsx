@@ -8,6 +8,50 @@ import './Profile.css'
 const fmt = (n) => '₹' + Number(n || 0).toLocaleString('en-IN')
 const MAX_DOC_BYTES = 5 * 1024 * 1024
 
+// Bookings are fetched in full and paged in the browser. The list is one
+// customer's own history, so it is small enough that a page of it is not worth
+// a round trip — and the Current/Past split has to count the whole set anyway.
+const PAGE_SIZE = 10
+
+/** A window of page numbers around the current one, so a long history does not
+ *  print a hundred buttons. */
+function pageWindow(current, total, span = 5) {
+  let start = Math.max(1, current - Math.floor(span / 2))
+  const end = Math.min(total, start + span - 1)
+  start = Math.max(1, end - span + 1)
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i)
+}
+
+/* Tile icons, drawn from currentColor so the selected tile's gold carries into
+   the mark without a second rule. */
+const ICONS = {
+  personal: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 20.5v-1A5.5 5.5 0 0 1 10 14h4a5.5 5.5 0 0 1 5.5 5.5v1',
+  kyc: 'M12 3l7.5 3v5.2c0 4.3-3 8.3-7.5 9.8-4.5-1.5-7.5-5.5-7.5-9.8V6L12 3zM9 12l2.2 2.2L15.5 10',
+  bookings: 'M8 3v3M16 3v3M4 9h16M5 6h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zM8.5 13h3M8.5 17h6',
+}
+
+/**
+ * One of the three tiles in the row. The tiles are the navigation; the section
+ * they select opens full width underneath, rather than inside a third-width
+ * column where two-column forms and booking rows would not fit.
+ */
+function Tile({ id, title, sub, meta, active, onSelect }) {
+  return (
+    <button
+      type="button"
+      className={`tile${active ? ' on' : ''}`}
+      aria-expanded={active}
+      aria-controls="pf-detail"
+      onClick={onSelect}>
+      <span className="tile__ic">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d={ICONS[id]} /></svg>
+      </span>
+      <span className="tile__t">{title}</span>
+      <span className="tile__m">{meta ?? sub}</span>
+    </button>
+  )
+}
+
 /**
  * My Profile — personal details, KYC, and bookings.
  *
@@ -21,12 +65,18 @@ const MAX_DOC_BYTES = 5 * 1024 * 1024
  * own policies and is not affected by the lockdown.
  */
 export default function Profile() {
-  const { user, signOut } = useAuthStore()
+  const { user } = useAuthStore()
 
   const [profile, setProfile] = useState(null)
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('active')
+  const [page, setPage] = useState(1)
+  // Which tile's section is open below the row, or null for none. One at a time
+  // because there is one detail area — switching tiles unmounts the previous
+  // section, but every field is controlled from state up here, so a part-filled
+  // form is still intact when the customer comes back to it.
+  const [section, setSection] = useState(null)
 
   const [phone, setPhone] = useState('')
   const [dob, setDob] = useState('')
@@ -76,6 +126,10 @@ export default function Profile() {
   }
 
   const displayName = profile?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'
+  // The greeting takes the first name only, matching the header link the
+  // customer just clicked to get here — and a full legal name in a 42px display
+  // face wraps the heading on anything narrower than a laptop.
+  const firstName = displayName.split(' ')[0]
 
   /** Verified beats pending; pending only once something has actually been sent in. */
   const kycState = profile?.kyc_verified
@@ -154,18 +208,49 @@ export default function Profile() {
     }
   }
 
+  const pick = (k) => setSection((s) => (s === k ? null : k))
+
   const active = bookings.filter((b) => b.status === 'confirmed')
   const past = bookings.filter((b) => b.status !== 'confirmed')
   const shown = tab === 'active' ? active : past
 
+  // `page` is clamped rather than trusted: a refetch can shorten the list under
+  // a page the customer is already on, which would otherwise render blank.
+  const pageCount = Math.max(1, Math.ceil(shown.length / PAGE_SIZE))
+  const current = Math.min(page, pageCount)
+  const from = (current - 1) * PAGE_SIZE
+  const pageItems = shown.slice(from, from + PAGE_SIZE)
+
+  function switchTab(next) {
+    setTab(next)
+    setPage(1)
+  }
+
   return (
     <div className="pf">
       <div className="pf__i">
-        <h1 className="pf__title">My Profile</h1>
+        <h1 className="pf__title">Welcome <span className="pf__name">{firstName}</span></h1>
+
+        {/* One row of tiles; the chosen section opens full width below them. */}
+        <div className="tiles">
+          <Tile
+            id="personal" title="Personal Information" sub="Name, email and phone"
+            active={section === 'personal'} onSelect={() => pick('personal')} />
+          <Tile
+            id="kyc" title="KYC Information"
+            active={section === 'kyc'} onSelect={() => pick('kyc')}
+            meta={<span className={`kyc-badge ${kycState.cls}`}><span className="dot" />{kycState.label}</span>} />
+          <Tile
+            id="bookings" title="My Bookings"
+            sub={loading ? 'Loading…' : `${bookings.length} booking${bookings.length === 1 ? '' : 's'}`}
+            active={section === 'bookings'} onSelect={() => pick('bookings')} />
+        </div>
+
+        <div className="pf__detail" id="pf-detail">
 
         {/* ── PERSONAL ────────────────────────────────────────────────── */}
-        <div className="pf__hd"><span className="pf__sec">Personal Information</span></div>
-        <div className="pf__card">
+        {section === 'personal' && (
+        <div className="pnl__b">
           <div className="pf__grid">
             <div className="pf__f">
               <div className="pf__lbl">Full Name</div>
@@ -191,13 +276,11 @@ export default function Profile() {
           </button>
           {personalMsg && <div className={`pf__status${personalMsg.err ? ' err' : ''}`}>{personalMsg.text}</div>}
         </div>
+        )}
 
         {/* ── KYC ─────────────────────────────────────────────────────── */}
-        <div className="pf__hd">
-          <span className="pf__sec">KYC Information</span>
-          <span className={`kyc-badge ${kycState.cls}`}><span className="dot" />{kycState.label}</span>
-        </div>
-        <div className="pf__card">
+        {section === 'kyc' && (
+        <div className="pnl__b">
           <div className="pf__grid">
             <div className="pf__f">
               <label className="pf__lbl" htmlFor="pf-dob">Date of Birth</label>
@@ -256,46 +339,83 @@ export default function Profile() {
             {savingKyc ? 'Saving…' : 'Save KYC Details'}
           </button>
           {kycMsg && <div className={`pf__status${kycMsg.err ? ' err' : ''}`}>{kycMsg.text}</div>}
-
-          <div className="pf__signout">
-            <button onClick={() => signOut()}>Sign out</button>
-          </div>
         </div>
+        )}
 
         {/* ── BOOKINGS ────────────────────────────────────────────────── */}
-        <div className="pf__hd"><span className="pf__sec">My Bookings</span></div>
-
-        <div className="pf__tabs">
-          <button className={`pf__tab${tab === 'active' ? ' on' : ''}`} onClick={() => setTab('active')}>Current</button>
-          <button className={`pf__tab${tab === 'past' ? ' on' : ''}`} onClick={() => setTab('past')}>Past</button>
-        </div>
-
-        {loading ? (
-          <div className="pf__empty">Loading…</div>
-        ) : shown.length === 0 ? (
-          <div className="pf__empty">
-            <div className="ic">✈</div>
-            <div>No {tab === 'active' ? 'current' : 'past'} bookings</div>
+        {section === 'bookings' && (
+        <div className="pnl__b">
+          <div className="pf__tabs">
+            <button className={`pf__tab${tab === 'active' ? ' on' : ''}`} onClick={() => switchTab('active')}>
+              Current ({active.length})
+            </button>
+            <button className={`pf__tab${tab === 'past' ? ' on' : ''}`} onClick={() => switchTab('past')}>
+              Past ({past.length})
+            </button>
           </div>
-        ) : (
-          shown.map((b) => (
-            <div className="bk" key={b.id}>
-              <div>
-                <span className="bk__ref">{b.ref}</span>
-                <span className={`bk__status ${b.status === 'confirmed' ? 'confirmed' : 'other'}`} style={{ marginLeft: 10 }}>
-                  {b.status}
-                </span>
-                <div className="bk__route">{b.route || '—'}</div>
-                <div className="bk__meta">{b.flight_date || '—'} · {b.aircraft || '—'} · {b.operator_name || '—'}</div>
-              </div>
-              <div className="bk__r">
-                <div className="bk__amt">{fmt(b.total_amount)}</div>
-                <div style={{ fontSize: 12, color: 'var(--white-30)', marginTop: 4 }}>{b.passengers || 1} Pax</div>
-                <button className="bk__inv" onClick={() => generateInvoice(b)}>Invoice</button>
-              </div>
+
+          {loading ? (
+            <div className="pf__empty">Loading…</div>
+          ) : shown.length === 0 ? (
+            <div className="pf__empty">
+              <div className="ic">✈</div>
+              <div>No {tab === 'active' ? 'current' : 'past'} bookings</div>
             </div>
-          ))
+          ) : (
+            <>
+              {pageItems.map((b) => (
+                <div className="bk" key={b.id}>
+                  <div>
+                    <span className="bk__ref">{b.ref}</span>
+                    <span className={`bk__status ${b.status === 'confirmed' ? 'confirmed' : 'other'}`} style={{ marginLeft: 10 }}>
+                      {b.status}
+                    </span>
+                    <div className="bk__route">{b.route || '—'}</div>
+                    <div className="bk__meta">{b.flight_date || '—'} · {b.aircraft || '—'} · {b.operator_name || '—'}</div>
+                  </div>
+                  <div className="bk__r">
+                    <div className="bk__amt">{fmt(b.total_amount)}</div>
+                    <div style={{ fontSize: 12, color: 'var(--white-30)', marginTop: 4 }}>{b.passengers || 1} Pax</div>
+                    <button className="bk__inv" onClick={() => generateInvoice(b)}>Invoice</button>
+                  </div>
+                </div>
+              ))}
+
+              {/* The range readout is shown even on a single page — it answers
+                  "is that everything?", which a lone set of arrows does not. */}
+              <div className="pg">
+                <div className="pg__info">
+                  Showing {from + 1}–{Math.min(from + PAGE_SIZE, shown.length)} of {shown.length}
+                </div>
+
+                {pageCount > 1 && (
+                  <div className="pg__ctl">
+                    <button
+                      className="pg__b" onClick={() => setPage(current - 1)}
+                      disabled={current === 1} aria-label="Previous page">‹</button>
+
+                    {pageWindow(current, pageCount).map((n) => (
+                      <button
+                        key={n}
+                        className={`pg__b${n === current ? ' on' : ''}`}
+                        onClick={() => setPage(n)}
+                        aria-current={n === current ? 'page' : undefined}>
+                        {n}
+                      </button>
+                    ))}
+
+                    <button
+                      className="pg__b" onClick={() => setPage(current + 1)}
+                      disabled={current === pageCount} aria-label="Next page">›</button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
         )}
+
+        </div>
       </div>
     </div>
   )

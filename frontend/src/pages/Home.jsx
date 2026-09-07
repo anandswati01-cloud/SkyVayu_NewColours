@@ -60,7 +60,11 @@ const FEATURES = [
   ['Pricing', 'What You See Is What You Pay', 'No hidden charges. No last-minute additions. The quote you receive is the price you pay — fully secured.'],
 ]
 
-const YT = 'autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3&fs=0&cc_load_policy=0&disablekb=1'
+// playsinline keeps iOS from taking a background clip fullscreen on play. The
+// chrome-hiding params here (showinfo, modestbranding) no longer do anything —
+// YouTube dropped them — so the player's title and buttons are cropped out of
+// view in CSS instead. See .yt-wrap iframe in Home.css.
+const YT = 'autoplay=1&mute=1&loop=1&controls=0&showinfo=0&rel=0&modestbranding=1&iv_load_policy=3&fs=0&cc_load_policy=0&disablekb=1&playsinline=1'
 
 export default function Home() {
   const navigate = useNavigate()
@@ -632,8 +636,10 @@ export default function Home() {
               No commitment required. A verified quote arrives within 60 minutes —
               and costs nothing to request.
             </p>
+            {/* Operator sign-in deliberately does not appear here. It belongs to
+                the header and the footer; this section is the customer's closing
+                call to action and carries one. */}
             <button className="btn-p" onClick={() => scrollTo('booking')}>Request Your Charter →</button>
-            {/* <button className="btn-t" onClick={() => navigate('/operator')}>Operator Login</button> */}
           </div>
         </div>
       </section>

@@ -4,7 +4,7 @@ import useOperatorStore from '../../store/operatorStore'
 import { quoteApi, fleetApi, operatorApi } from '../../services/api'
 import { showToast } from '../../components/ui/Toast'
 import { Icon, Modal, ConfirmDialog, SkeletonCards, SkeletonTiles } from './OperatorUI'
-import logo from '../../assets/skyvayu-logo.png'
+import logo from '../../assets/skyvayu-wordmark.png'
 import './operator.css'
 
 const fmt = n => 'Rs.' + Number(n || 0).toLocaleString('en-IN')

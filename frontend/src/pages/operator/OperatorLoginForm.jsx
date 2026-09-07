@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useOperatorStore from '../../store/operatorStore'
 import { operatorApi, authApi } from '../../services/api'
-import logo from '../../assets/skyvayu-logo.png'
+import logo from '../../assets/skyvayu-wordmark.png'
 
 /* The operator sign-in card, shared by two callers:
  *
@@ -21,7 +21,7 @@ const s = {
   box: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '40px 40px', width: '100%', maxWidth: 400 },
   logo: { textAlign: 'center', marginBottom: 32 },
   // The site's own mark, so the card matches the header it opens from.
-  mark: { height: 42, width: 'auto', display: 'block', margin: '0 auto' },
+  mark: { height: 25, width: 'auto', display: 'block', margin: '0 auto' },
   sub: { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginTop: 6 },
   title: { fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 400, marginBottom: 6, textAlign: 'center' },
   desc: { fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: 28 },

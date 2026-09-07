@@ -12,11 +12,20 @@
 .v1 .hero__fallback { position: absolute; inset: 0; background: var(--bg); }
 .v1 .yt-wrap { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; opacity: .70; transition: opacity 1s ease; }
 .v1 .yt-wrap::after { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: all; }
+/* Over-scaled by a factor rather than a fixed pixel pad.
+   YouTube draws its own chrome inside the player's top and bottom edges — the
+   video title, the "More videos" grid, the YouTube button — and none of it can
+   be switched off from the embed URL any more: showinfo was removed and
+   modestbranding is ignored. Cropping it out of view is the only reliable
+   approach. The chrome is sized relative to the player, so the old fixed 100px
+   crop stopped covering it once the player got large. A factor pushes roughly a
+   fifth of the player past each edge at every viewport, and scaling both axes
+   together keeps the footage from stretching. */
 .v1 .yt-wrap iframe {
   position: absolute !important; top: 50%; left: 50%;
-  width: max(100%, 177.78vh) !important;
-  height: calc(max(100%, 56.25vw) + 200px) !important;
-  transform: translate(-50%, calc(-50% - 100px)); border: none;
+  width: calc(max(100%, 177.78vh) * 1.4) !important;
+  height: calc(max(100%, 56.25vw) * 1.4) !important;
+  transform: translate(-50%, -50%); border: none;
 }
 .v1 .vbreak .yt-wrap { opacity: .55; }
 .v1 .hero__vig {
@@ -39,16 +48,22 @@
 .v1 .hero__meta { display: flex; align-items: flex-start; margin-bottom: 48px; max-width: 700px; }
 .v1 .hero__desc { font-size: .92rem; font-weight: 300; color: var(--t2); line-height: 1.8; max-width: 40ch; padding-right: 48px; }
 .v1 .hero__stats { display: flex; flex-direction: column; gap: 18px; padding-left: 48px; border-left: 1px solid var(--bd); flex-shrink: 0; }
-.v1 .hero__stat { display: flex; align-items: baseline; gap: 10px; }
+/* These sit directly on the hero video, so they carry a shadow — a mid-grey
+   label washed out completely against the brighter frames of the footage. */
+.v1 .hero__stat { display: flex; align-items: baseline; gap: 10px; text-shadow: 0 1px 10px oklch(0% 0 0 / .65); }
 .v1 .hero__stat-n { font-family: var(--font-d); font-size: 1.8rem; font-weight: 300; color: var(--t1); line-height: 1; font-variant-numeric: tabular-nums; }
 .v1 .hero__stat-n sub { font-size: .85rem; color: var(--brass); vertical-align: baseline; }
-.v1 .hero__stat-l { font-size: .62rem; letter-spacing: .15em; text-transform: uppercase; color: var(--tm); }
+.v1 .hero__stat-l { font-size: .62rem; letter-spacing: .15em; text-transform: uppercase; color: var(--t1); }
 .v1 .hero__actions { display: flex; align-items: center; gap: 30px; flex-wrap: wrap; }
 
 .v1 .btn-p { font-family: var(--font-b); font-size: .68rem; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: var(--bg); background: var(--brass); padding: 15px 38px; border: none; cursor: pointer; text-decoration: none; transition: background .25s; display: inline-block; white-space: nowrap; }
 .v1 .btn-p:hover { background: var(--brass-lt); }
 .v1 .btn-t { font-family: var(--font-b); font-size: .68rem; letter-spacing: .15em; text-transform: uppercase; color: var(--t2); text-decoration: none; padding-bottom: 2px; border: none; border-bottom: 1px solid var(--tm); background: none; cursor: pointer; transition: color .25s, border-color .25s; }
 .v1 .btn-t:hover { color: var(--t1); border-color: var(--t2); }
+/* Secondary box. Identical geometry and type to .btn-p so the two read as a
+   matched pair, outlined instead of filled so the primary action still leads. */
+.v1 .btn-s { font-family: var(--font-b); font-size: .68rem; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: var(--t1); background: transparent; padding: 15px 38px; border: 1px solid var(--brass-bd); cursor: pointer; text-decoration: none; transition: background .25s, border-color .25s; display: inline-block; white-space: nowrap; }
+.v1 .btn-s:hover { border-color: var(--brass); background: oklch(72% 0.08 75 / .12); }
 
 .v1 .hero__strip { position: relative; z-index: 2; border-top: 1px solid var(--bd); overflow: hidden; }
 .v1 .hero__strip-i { display: flex; align-items: stretch; height: 68px; width: max-content; animation: v1Marquee 32s linear infinite; }

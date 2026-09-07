@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import useSectionNav from './useSectionNav'
-import logo from '../../assets/skyvayu-logo.png'
+import logo from '../../assets/skyvayu-wordmark.png'
 import './layout.css'
 
 /**
