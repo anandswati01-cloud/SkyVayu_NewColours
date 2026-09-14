@@ -25,11 +25,12 @@
   --op-confirmed: #2e7d52;
   --op-sidebar-w: 220px;
 
-  /* Burgundy accent — replaces gold/cyan from the old navy palette */
-  --op-accent:    oklch(52% 0.18 20);
-  --op-accent-lt: oklch(60% 0.18 20);
-  --op-accent-bg: oklch(52% 0.18 20 / 0.10);
-  --op-accent-bg2:oklch(52% 0.18 20 / 0.06);
+  /* Burgundy accent — replaces gold/cyan from the old navy palette.
+     L=64% is the minimum that reads as distinctly coloured against the near-black bg. */
+  --op-accent:    oklch(64% 0.22 18);
+  --op-accent-lt: oklch(72% 0.20 18);
+  --op-accent-bg: oklch(64% 0.22 18 / 0.14);
+  --op-accent-bg2:oklch(64% 0.22 18 / 0.08);
 
   /* Font overrides — match fleet/about design language */
   --font-display: var(--font-d);
@@ -137,12 +138,12 @@
 
 .op-btn--cyan {
   background: var(--op-accent-bg2);
-  border-color: oklch(52% 0.18 20 / 0.4);
+  border-color: oklch(64% 0.22 18 / 0.4);
   color: var(--op-accent-lt);
 }
 .op-btn--cyan:hover:not(:disabled) {
   background: var(--op-accent-bg);
-  border-color: oklch(52% 0.18 20 / 0.7);
+  border-color: oklch(64% 0.22 18 / 0.7);
 }
 
 .op-btn--ghost {
@@ -183,7 +184,7 @@
 .op-inp:hover { border-color: rgba(255, 255, 255, 0.18); }
 .op-inp:focus {
   border-color: var(--op-accent);
-  background: oklch(52% 0.18 20 / 0.06);
+  background: oklch(64% 0.22 18 / 0.07);
 }
 /* The native picker glyph is black-on-dark by default and effectively invisible. */
 .op-inp[type='datetime-local']::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; cursor: pointer; }
@@ -225,7 +226,11 @@
 
 /* The band keeps the full sidebar width so its rule runs edge to edge; the
    inner wrapper collapses to the mark, which is what the caption centres on. */
-.op__brand { padding: 24px 20px 20px; border-bottom: 1px solid var(--op-line); }
+.op__brand {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--op-line);
+  background: oklch(64% 0.22 18 / 0.06);
+}
 .op__brand-mark { width: fit-content; }
 
 /* The same mark the customer site uses, rather than a typeset wordmark that
@@ -239,7 +244,7 @@
   font-size: 9px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--white-30);
+  color: var(--op-accent-lt);
   margin-top: 4px;
   text-align: center;
   /* Letter-spacing leaves a trailing gap after the last character, which drags
@@ -268,8 +273,8 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: oklch(52% 0.18 20 / 0.15);
-  border: 1px solid oklch(52% 0.18 20 / 0.3);
+  background: oklch(64% 0.22 18 / 0.18);
+  border: 1px solid oklch(64% 0.22 18 / 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -573,9 +578,9 @@
   margin-bottom: 16px;
 }
 .op-note--info {
-  color: oklch(52% 0.18 20 / 0.85);
-  background: oklch(52% 0.18 20 / 0.08);
-  border: 1px solid oklch(52% 0.18 20 / 0.2);
+  color: oklch(72% 0.20 18 / 0.9);
+  background: oklch(64% 0.22 18 / 0.10);
+  border: 1px solid oklch(64% 0.22 18 / 0.25);
   border-radius: 4px;
   padding: 10px 14px;
   margin-bottom: 0;
@@ -660,6 +665,14 @@
     position: sticky;
     top: 0;
     z-index: 100;
+  }
+  .op__bar-logo {
+    height: 18px;
+    width: auto;
+    display: block;
+    margin-left: auto;
+    margin-right: 4px;
+    opacity: 0.9;
   }
   .op__burger {
     background: none;

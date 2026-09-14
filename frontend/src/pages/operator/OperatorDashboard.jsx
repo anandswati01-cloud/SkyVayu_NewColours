@@ -92,7 +92,7 @@ function TimerBar({ createdAt }) {
   const pct = Math.min((elapsed / total) * 100, 100)
   const expired = remaining <= 0
   const urgent = remaining > 0 && remaining < 10 * 60 * 1000
-  const color = expired ? 'var(--op-bad)' : urgent ? 'var(--op-warn)' : 'var(--gold)'
+  const color = expired ? 'var(--op-bad)' : urgent ? 'var(--op-warn)' : 'var(--op-accent)'
   return (
     <div className="op-timer">
       <div className="op-timer__row" style={{ color }}>
@@ -626,6 +626,7 @@ export default function OperatorDashboard() {
       <div className="op__bar">
         <button className="op__burger" onClick={() => setNavOpen(o => !o)} aria-label="Menu" aria-expanded={navOpen}>☰</button>
         <span className="op__bar-title">{current?.label || 'Operator Portal'}</span>
+        <img className="op__bar-logo" src={logo} alt="SkyVayu" />
       </div>
 
       <main className="op__main">
