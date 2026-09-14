@@ -232,18 +232,23 @@
   border-bottom: 1px solid oklch(70% 0.22 8 / 0.2);
   background: oklch(18% 0.08 8);
 }
-.op__brand-mark { width: fit-content; }
+.op__brand-mark {
+  width: fit-content;
+  display: flex;
+  flex-direction: column;
+}
 
 .op__logo-unit {
   display: flex;
   align-items: center;
   gap: 10px;
-  justify-content: center;
 }
-.op__logo { height: 32px; width: auto; display: block; max-width: 100%; }
+.op__logo { height: 48px; width: auto; display: block; max-width: 100%; }
+.op__logo-wordmark { display: flex; flex-direction: column; gap: 4px; }
+
 .op__logo-text {
   font-family: var(--font-b);
-  font-size: 16px;
+  font-size: 19px;
   font-weight: 500;
   letter-spacing: 0.26em;
   text-transform: uppercase;
@@ -253,14 +258,12 @@
 
 .op__brand-sub {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10.5px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.35);
-  margin-top: 5px;
-  /* Indent to align left edge with the "S" of SKY VAYU: mark ≈ 32px + 10px gap */
-  padding-left: 42px;
   text-align: left;
+  white-space: nowrap;
 }
 
 .op__me {

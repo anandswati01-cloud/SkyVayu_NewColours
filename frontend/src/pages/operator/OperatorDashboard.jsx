@@ -49,9 +49,11 @@ function Sidebar({ section, setSection, user, operator, onLogout, isOwner, open 
         <div className="op__brand-mark">
           <div className="op__logo-unit">
             <img className="op__logo" src={logo} alt="SkyVayu mark" />
-            <span className="op__logo-text">Sky Vayu</span>
+            <div className="op__logo-wordmark">
+              <span className="op__logo-text">Sky Vayu</span>
+              <div className="op__brand-sub">Operator Portal</div>
+            </div>
           </div>
-          <div className="op__brand-sub">Operator Portal</div>
         </div>
       </div>
 
