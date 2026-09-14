@@ -257,11 +257,10 @@
   letter-spacing: 2px;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.35);
-  margin-top: 4px;
-  text-align: center;
-  /* Letter-spacing leaves a trailing gap after the last character, which drags
-     centred text one notch left. Offset it by the same amount. */
-  text-indent: 2px;
+  margin-top: 5px;
+  /* Indent to align left edge with the "S" of SKY VAYU: mark ≈ 32px + 10px gap */
+  padding-left: 42px;
+  text-align: left;
 }
 
 .op__me {
