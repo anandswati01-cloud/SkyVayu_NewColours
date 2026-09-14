@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useOperatorStore from '../../store/operatorStore'
 import { operatorApi, authApi } from '../../services/api'
-import logo from '../../assets/skyvayu-wordmark.png'
+import logo from '../../assets/sv-new-logo.png'
 
 /* The operator sign-in card, shared by two callers:
  *
@@ -17,14 +17,14 @@ import logo from '../../assets/skyvayu-wordmark.png'
  * uses it to close itself.
  */
 
-const BURGUNDY = 'oklch(56% 0.18 8)'
-const BURGUNDY_LT = 'oklch(64% 0.15 8)'
+const BURGUNDY = 'oklch(70% 0.22 8)'
+const BURGUNDY_LT = 'oklch(78% 0.18 8)'
 const BG = 'oklch(6% 0.008 10)'
 
 const s = {
   box: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '40px 40px', width: '100%', maxWidth: 400 },
   logo: { textAlign: 'center', marginBottom: 32 },
-  mark: { height: 25, width: 'auto', display: 'block', margin: '0 auto' },
+  mark: { height: 64, width: 'auto', display: 'block', margin: '0 auto', maxWidth: '100%' },
   sub: { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginTop: 6 },
   title: { fontFamily: 'var(--font-d)', fontSize: 24, fontWeight: 400, marginBottom: 6, textAlign: 'center' },
   desc: { fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: 28 },
