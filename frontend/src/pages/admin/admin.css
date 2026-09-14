@@ -1,0 +1,249 @@
+/* Admin portal — scoped to .adm. Same design language as .op (operator portal)
+   but kept in a separate file so changes to one do not silently break the other. */
+
+.adm {
+  --adm-bg:         oklch(6% 0.008 10);
+  --adm-panel:      oklch(9% 0.012 10);
+  --adm-sidebar:    oklch(10% 0.04 8);
+  --adm-card:       oklch(11% 0.018 10);
+  --adm-line:       rgba(255, 255, 255, 0.06);
+  --adm-line-2:     rgba(255, 255, 255, 0.09);
+  --adm-fill:       rgba(255, 255, 255, 0.03);
+  --adm-dim:        rgba(255, 255, 255, 0.4);
+  --adm-accent:     oklch(70% 0.22 8);
+  --adm-accent-lt:  oklch(78% 0.18 8);
+  --adm-accent-bg:  oklch(70% 0.22 8 / 0.14);
+  --adm-accent-dim: oklch(70% 0.22 8 / 0.08);
+  --adm-ok:         #4caf50;
+  --adm-warn:       #f59e0b;
+  --adm-bad:        #e24b4a;
+
+  display: flex;
+  min-height: 100vh;
+  background: var(--adm-bg);
+  font-family: var(--font-b);
+}
+
+/* ── Sidebar ──────────────────────────────────────────────────────────────── */
+.adm__side {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--adm-sidebar);
+  border-right: 1px solid oklch(70% 0.22 8 / 0.12);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.adm__brand {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid oklch(70% 0.22 8 / 0.18);
+  background: oklch(18% 0.08 8);
+}
+
+.adm__logo-unit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.adm__logo { height: 48px; width: auto; display: block; }
+
+.adm__logo-wordmark {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.adm__logo-text {
+  font-family: var(--font-b);
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 1;
+}
+
+.adm__brand-sub {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+  white-space: nowrap;
+}
+
+.adm__nav {
+  flex: 1;
+  padding: 8px 10px;
+  overflow-y: auto;
+}
+
+.adm__nav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.55);
+  background: transparent;
+  font-family: var(--font-b);
+  font-size: 13px;
+  border: none;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
+  text-align: left;
+}
+
+.adm__nav-item:hover {
+  background: var(--adm-accent-dim);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.adm__nav-item.is-active {
+  color: var(--adm-accent);
+  background: var(--adm-accent-bg);
+}
+
+.adm__badge {
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: var(--adm-accent-bg);
+  color: var(--adm-accent);
+}
+
+.adm__nav-item.is-active .adm__badge {
+  background: var(--adm-accent);
+  color: #fff;
+}
+
+.adm__side-foot {
+  padding: 16px 16px;
+  border-top: 1px solid var(--adm-line);
+}
+
+.adm__signout {
+  width: 100%;
+  height: 36px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.adm__signout:hover {
+  border-color: var(--adm-accent);
+  color: var(--adm-accent);
+}
+
+/* ── Top bar ──────────────────────────────────────────────────────────────── */
+.adm__topbar {
+  background: oklch(8% 0.015 10);
+  border-bottom: 1px solid var(--adm-line-2);
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.adm__topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.adm__topbar-logo { height: 20px; width: auto; display: block; }
+
+.adm__topbar-logo-text {
+  font-family: var(--font-b);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.adm__topbar-tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  background: var(--adm-accent-bg);
+  border: 1px solid oklch(70% 0.22 8 / 0.25);
+  padding: 2px 8px;
+  border-radius: 3px;
+  color: var(--adm-accent);
+}
+
+.adm__topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.adm__topbar-email {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.3);
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+}
+
+.adm__topbar-signout {
+  height: 30px;
+  padding: 0 14px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
+  font-family: var(--font-mono);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.adm__topbar-signout:hover {
+  border-color: var(--adm-accent);
+  color: var(--adm-accent);
+}
+
+/* ── Content ──────────────────────────────────────────────────────────────── */
+.adm__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 100vh;
+}
+
+.adm__main {
+  flex: 1;
+  padding: 28px 32px;
+  overflow-y: auto;
+  max-width: 1100px;
+}
+
+.adm__h1 {
+  font-family: var(--font-d);
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--adm-accent);
+  margin-bottom: 24px;
+}

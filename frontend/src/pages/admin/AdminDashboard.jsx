@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../services/supabase'
 import { showToast } from '../../components/ui/Toast'
 import { adminApi } from '../../services/api'
-import logo from '../../assets/skyvayu-wordmark.png'
+import logo from '../../assets/sv-new-logo.png'
+import './admin.css'
 
 // ── Admin data access ──────────────────────────────────────────────────────────
 // Everything goes through /api/admin/*, which verifies profiles.is_admin
@@ -82,8 +83,8 @@ function Badge({ status, label }) {
 
 function StatCard({ num, label, color }) {
   return (
-    <div style={{ background: 'rgba(22,32,64,0.55)', backdropFilter: 'blur(12px)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '20px 22px' }}>
-      <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 300, color: color || 'var(--gold)', lineHeight: 1, paddingBottom: 4 }}>{num}</div>
+    <div style={{ background: 'oklch(11% 0.018 10)', backdropFilter: 'blur(12px)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '20px 22px' }}>
+      <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 300, color: color || 'var(--adm-accent)', lineHeight: 1, paddingBottom: 4 }}>{num}</div>
       <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>{label}</div>
     </div>
   )
@@ -102,28 +103,27 @@ function Sidebar({ section, setSection, onLogout, counts }) {
     { key: 'database', label: '⊞ Database' },
   ]
   return (
-    <aside style={{ width: 248, flexShrink: 0, background: 'rgba(15,26,48,0.65)', backdropFilter: 'blur(16px)', borderRight: '0.5px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0 }}>
-      <div style={{ padding: '26px 22px 22px', borderBottom: '0.5px solid rgba(255,255,255,0.1)' }}>
-        {/* fit-content wrapper so "Super Admin" centres on the mark rather than
-            on the full sidebar width. */}
-        <div style={{ width: 'fit-content' }}>
-          <img src={logo} alt="SkyVayu" style={{ height: 20, width: 'auto', display: 'block', marginInline: 'auto' }} />
-          {/* text-indent offsets the trailing gap letter-spacing leaves after
-              the last character, which otherwise drags centred text left. */}
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: 2, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginTop: 4, textAlign: 'center', textIndent: 2 }}>Super Admin</div>
+    <aside className="adm__side">
+      <div className="adm__brand">
+        <div className="adm__logo-unit">
+          <img className="adm__logo" src={logo} alt="SkyVayu mark" />
+          <div className="adm__logo-wordmark">
+            <span className="adm__logo-text">Sky Vayu</span>
+            <div className="adm__brand-sub">Super Admin</div>
+          </div>
         </div>
       </div>
-      <nav style={{ flex: 1, padding: '8px 12px' }}>
+      <nav className="adm__nav">
         {nav.map(({ key, label, badge }) => (
-          <div key={key} onClick={() => setSection(key)}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 22px', cursor: 'pointer', color: section === key ? 'var(--gold)' : 'rgba(255,255,255,0.6)', background: section === key ? 'rgba(251,191,36,0.08)' : 'transparent', fontSize: 13, transition: 'all 0.15s', borderRadius: 2 }}>
+          <button key={key} onClick={() => setSection(key)}
+            className={`adm__nav-item${section === key ? ' is-active' : ''}`}>
             <span>{label}</span>
-            {badge > 0 && <span style={{ background: section === key ? 'var(--gold)' : 'rgba(251,191,36,0.15)', color: section === key ? '#0c1324' : 'var(--gold)', fontSize: 11, padding: '1px 7px', borderRadius: 10 }}>{badge}</span>}
-          </div>
+            {badge > 0 && <span className="adm__badge">{badge}</span>}
+          </button>
         ))}
       </nav>
-      <div style={{ padding: '16px 20px', borderTop: '0.5px solid rgba(255,255,255,0.1)', marginTop: 'auto' }}>
-        <button onClick={onLogout} style={{ width: '100%', height: 36, background: 'transparent', border: '0.5px solid rgba(255,255,255,0.3)', borderRadius: 8, color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer' }}>Sign out</button>
+      <div className="adm__side-foot">
+        <button onClick={onLogout} className="adm__signout">Sign out</button>
       </div>
     </aside>
   )
@@ -169,8 +169,8 @@ function OperatorsSection({ onCountChange }) {
   const filtered = operators.filter(o => o.approval_status === tab)
   const counts = { pending: operators.filter(o => o.approval_status === 'pending').length, approved: operators.filter(o => o.approval_status === 'approved').length, rejected: operators.filter(o => o.approval_status === 'rejected').length }
 
-  const tabStyle = active => ({ padding: '12px 20px', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: active ? 'var(--gold)' : 'rgba(255,255,255,0.3)', borderBottom: `2px solid ${active ? 'var(--gold)' : 'transparent'}`, cursor: 'pointer', background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: 8 })
-  const card = { background: 'rgba(22,32,64,0.55)', backdropFilter: 'blur(12px)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '20px 24px', marginBottom: 12, transition: 'border-color 0.2s' }
+  const tabStyle = active => ({ padding: '12px 20px', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: active ? 'var(--adm-accent)' : 'rgba(255,255,255,0.3)', borderBottom: `2px solid ${active ? 'var(--adm-accent)' : 'transparent'}`, cursor: 'pointer', background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: 8 })
+  const card = { background: 'oklch(11% 0.018 10)', backdropFilter: 'blur(12px)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '20px 24px', marginBottom: 12, transition: 'border-color 0.2s' }
 
   return (
     <div>
@@ -185,7 +185,7 @@ function OperatorsSection({ onCountChange }) {
       <div style={{ display: 'flex', borderBottom: '0.5px solid rgba(255,255,255,0.1)', marginBottom: 20 }}>
         {[['pending', 'Pending applications'], ['approved', 'Approved operators'], ['rejected', 'Rejected']].map(([key, label]) => (
           <button key={key} style={tabStyle(tab === key)} onClick={() => setTab(key)}>
-            {label} <span style={{ background: 'rgba(251,191,36,0.15)', color: 'var(--gold)', padding: '1px 6px', borderRadius: 10, fontSize: 10 }}>{counts[key]}</span>
+            {label} <span style={{ background: 'oklch(70% 0.22 8 / 0.14)', color: 'var(--adm-accent)', padding: '1px 6px', borderRadius: 10, fontSize: 10 }}>{counts[key]}</span>
           </button>
         ))}
       </div>
@@ -220,7 +220,7 @@ function OperatorsSection({ onCountChange }) {
             {/* AOP Document */}
             {op.aop_document_url ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: 'rgba(255,255,255,0.04)', borderRadius: 8, border: '0.5px solid rgba(255,255,255,0.1)', marginBottom: 14 }}>
-                <div style={{ width: 32, height: 32, background: 'rgba(251,191,36,0.08)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>📄</div>
+                <div style={{ width: 32, height: 32, background: 'oklch(70% 0.22 8 / 0.08)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>📄</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 500 }}>{op.aop_document_name || "Air Operator's Permit"}</div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>AOP{op.aop_expiry_date ? ` · Expiry: ${fmtDate(op.aop_expiry_date)}` : ''}</div>
@@ -292,7 +292,7 @@ function AircraftSection({ onCountChange }) {
     if (res.ok) { showToast('Aircraft rejected', 'success'); load() } else showToast('Failed', 'error')
   }
 
-  const card = { background: 'rgba(22,32,64,0.55)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '20px 24px', marginBottom: 12 }
+  const card = { background: 'oklch(11% 0.018 10)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '20px 24px', marginBottom: 12 }
 
   return (
     <div>
@@ -316,7 +316,7 @@ function AircraftSection({ onCountChange }) {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
               {docs.map(([name, url, expiry]) => (
-                <div key={name} style={{ padding: '10px 12px', background: 'rgba(15,26,48,0.65)', borderRadius: 8, border: '0.5px solid rgba(255,255,255,0.1)' }}>
+                <div key={name} style={{ padding: '10px 12px', background: 'oklch(10% 0.04 8)', borderRadius: 8, border: '0.5px solid rgba(255,255,255,0.1)' }}>
                   <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'rgba(255,255,255,0.3)', marginBottom: 6 }}>{name}</div>
                   {url ? (
                     <>
@@ -370,7 +370,7 @@ function EmployeesSection({ onCountChange }) {
     if (res.ok) { showToast('Employee rejected', 'success'); load() } else showToast('Failed', 'error')
   }
 
-  const card = { background: 'rgba(22,32,64,0.55)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '20px 24px', marginBottom: 12 }
+  const card = { background: 'oklch(11% 0.018 10)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '20px 24px', marginBottom: 12 }
 
   return (
     <div>
@@ -386,7 +386,7 @@ function EmployeesSection({ onCountChange }) {
           <div key={e.id} style={card}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(24,95,165,0.15)', border: '0.5px solid rgba(133,183,235,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 500, color: 'var(--gold)' }}>{ini}</div>
+                <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(24,95,165,0.15)', border: '0.5px solid rgba(133,183,235,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 500, color: 'var(--adm-accent)' }}>{ini}</div>
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 500 }}>{e.full_name || e.username}</div>
                   <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>{opName} · @{e.username}</div>
@@ -469,7 +469,7 @@ function BookingsSection() {
           <tbody>
             {filtered.map(b => (
               <tr key={b.id} style={{ borderBottom: '0.5px solid rgba(255,255,255,0.04)' }}>
-                <td style={{ padding: '10px 12px', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--gold)' }}>{b.ref}</td>
+                <td style={{ padding: '10px 12px', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--adm-accent)' }}>{b.ref}</td>
                 <td style={{ padding: '10px 12px', color: '#fff', fontWeight: 500 }}>{b.client_name}<div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{b.client_email}</div></td>
                 <td style={{ padding: '10px 12px', color: 'rgba(255,255,255,0.6)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.route || '—'}</td>
                 <td style={{ padding: '10px 12px', color: 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap' }}>{b.flight_date || '—'}</td>
@@ -591,8 +591,8 @@ function PaymentsSection({ onCountChange }) {
   const refundedTotal = bookings.reduce((a, b) => a + Number(b.refund_amount || 0), 0)
   const stuck = issues.filter(b => b.status === 'pending_payment').length
 
-  const tabStyle = active => ({ padding: '10px 18px', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: active ? 'var(--gold)' : 'rgba(255,255,255,0.3)', borderBottom: `2px solid ${active ? 'var(--gold)' : 'transparent'}`, cursor: 'pointer', background: 'none', border: 'none', whiteSpace: 'nowrap' })
-  const card = { background: 'rgba(22,32,64,0.55)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '18px 22px', marginBottom: 12 }
+  const tabStyle = active => ({ padding: '10px 18px', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: active ? 'var(--adm-accent)' : 'rgba(255,255,255,0.3)', borderBottom: `2px solid ${active ? 'var(--adm-accent)' : 'transparent'}`, cursor: 'pointer', background: 'none', border: 'none', whiteSpace: 'nowrap' })
+  const card = { background: 'oklch(11% 0.018 10)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '18px 22px', marginBottom: 12 }
   const btn = (color, disabled) => ({ height: 36, padding: '0 18px', background: disabled ? 'rgba(255,255,255,0.05)' : 'transparent', border: `0.5px solid ${disabled ? 'rgba(255,255,255,0.12)' : color}`, color: disabled ? 'rgba(255,255,255,0.25)' : color, borderRadius: 8, fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', cursor: disabled ? 'not-allowed' : 'pointer' })
   const input = { height: 36, padding: '0 12px', background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.3)', borderRadius: 8, color: '#fff', fontSize: 13, fontFamily: 'var(--font-body)', outline: 'none' }
   const kv = { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 2 }
@@ -627,7 +627,7 @@ function PaymentsSection({ onCountChange }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14, gap: 12 }}>
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 500 }}>
-                    <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)', fontSize: 13 }}>{b.ref}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--adm-accent)', fontSize: 13 }}>{b.ref}</span>
                     {' · '}{b.client_name}
                   </div>
                   <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
@@ -696,7 +696,7 @@ function PaymentsSection({ onCountChange }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12, gap: 12 }}>
                   <div>
                     <div style={{ fontSize: 15, fontWeight: 500 }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--gold)', fontSize: 13 }}>{b.ref}</span>
+                      <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--adm-accent)', fontSize: 13 }}>{b.ref}</span>
                       {' · '}{b.client_name}
                     </div>
                     <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
@@ -714,7 +714,7 @@ function PaymentsSection({ onCountChange }) {
                   ].map(([k, v]) => (
                     <div key={k}>
                       <div style={kv}>{k}</div>
-                      <div style={{ fontSize: 13, color: k === 'Refundable' ? 'var(--gold)' : 'rgba(255,255,255,0.6)' }}>{v}</div>
+                      <div style={{ fontSize: 13, color: k === 'Refundable' ? 'var(--adm-accent)' : 'rgba(255,255,255,0.6)' }}>{v}</div>
                     </div>
                   ))}
                 </div>
@@ -749,7 +749,7 @@ function PaymentsSection({ onCountChange }) {
       {!loading && tab === 'events' && (
         <div style={{ overflowX: 'auto' }}>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 16, lineHeight: 1.6 }}>
-            Every delivery Razorpay has made to <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--gold)' }}>/api/payments/webhook</code>.
+            Every delivery Razorpay has made to <code style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--adm-accent)' }}>/api/payments/webhook</code>.
             An empty list once payments are live usually means the webhook URL or its secret is wrong in the Razorpay dashboard.
           </p>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -859,8 +859,8 @@ function FeedbackSection() {
     showToast('Deleted', 'success')
   }
 
-  const tabStyle = active => ({ padding: '10px 18px', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: active ? 'var(--gold)' : 'rgba(255,255,255,0.3)', borderBottom: `2px solid ${active ? 'var(--gold)' : 'transparent'}`, cursor: 'pointer', background: 'none', border: 'none' })
-  const card = { background: 'rgba(22,32,64,0.55)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '16px 20px', marginBottom: 10 }
+  const tabStyle = active => ({ padding: '10px 18px', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: active ? 'var(--adm-accent)' : 'rgba(255,255,255,0.3)', borderBottom: `2px solid ${active ? 'var(--adm-accent)' : 'transparent'}`, cursor: 'pointer', background: 'none', border: 'none' })
+  const card = { background: 'oklch(11% 0.018 10)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '16px 20px', marginBottom: 10 }
 
   return (
     <div>
@@ -877,7 +877,7 @@ function FeedbackSection() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                 {f.name && <span style={{ fontSize: 14, fontWeight: 500 }}>{f.name}</span>}
                 {f.email && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{f.email}</span>}
-                {f.rating && <span style={{ color: 'var(--gold)', fontSize: 12 }}>{'★'.repeat(f.rating)}</span>}
+                {f.rating && <span style={{ color: 'var(--adm-accent)', fontSize: 12 }}>{'★'.repeat(f.rating)}</span>}
               </div>
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>{f.message}</p>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>{fmtDateTime(f.created_at)}</div>
@@ -896,7 +896,7 @@ function FeedbackSection() {
                 <span style={{ fontSize: 14, fontWeight: 500 }}>{c.name}</span>
                 <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{c.email}</span>
               </div>
-              {c.subject && <div style={{ fontSize: 12, color: 'var(--gold)', marginBottom: 6 }}>{c.subject}</div>}
+              {c.subject && <div style={{ fontSize: 12, color: 'var(--adm-accent)', marginBottom: 6 }}>{c.subject}</div>}
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>{c.message}</p>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>{fmtDateTime(c.created_at)}</div>
             </div>
@@ -944,14 +944,14 @@ function DatabaseSection() {
     return Object.values(r).some(v => String(v || '').toLowerCase().includes(search.toLowerCase()))
   })
 
-  const tabStyle = active => ({ padding: '10px 18px', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: active ? 'var(--gold)' : 'rgba(255,255,255,0.3)', borderBottom: `2px solid ${active ? 'var(--gold)' : 'transparent'}`, cursor: 'pointer', background: 'none', border: 'none', whiteSpace: 'nowrap' })
+  const tabStyle = active => ({ padding: '10px 18px', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: active ? 'var(--adm-accent)' : 'rgba(255,255,255,0.3)', borderBottom: `2px solid ${active ? 'var(--adm-accent)' : 'transparent'}`, cursor: 'pointer', background: 'none', border: 'none', whiteSpace: 'nowrap' })
 
   const colLabel = col => col.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
 
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 32, color: 'var(--gold)', fontWeight: 400 }}>Database</h2>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 32, color: 'var(--adm-accent)', fontWeight: 400 }}>Database</h2>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search all records…"
           style={{ flex: 1, minWidth: 200, height: 36, padding: '0 14px', background: 'rgba(255,255,255,0.05)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff', fontSize: 13, fontFamily: 'var(--font-body)', outline: 'none' }} />
       </div>
@@ -959,7 +959,7 @@ function DatabaseSection() {
       <div style={{ display: 'flex', borderBottom: '0.5px solid rgba(255,255,255,0.1)', marginBottom: 0, overflowX: 'auto' }}>
         {TABS.map(t => (
           <button key={t.key} style={tabStyle(tab === t.key)} onClick={() => setTab(t.key)}>
-            {t.key} {data[t.key] ? <span style={{ background: 'rgba(251,191,36,0.15)', color: 'var(--gold)', padding: '1px 5px', borderRadius: 8, fontSize: 9, marginLeft: 4 }}>{data[t.key].length}</span> : ''}
+            {t.key} {data[t.key] ? <span style={{ background: 'oklch(70% 0.22 8 / 0.14)', color: 'var(--adm-accent)', padding: '1px 5px', borderRadius: 8, fontSize: 9, marginLeft: 4 }}>{data[t.key].length}</span> : ''}
           </button>
         ))}
       </div>
@@ -1028,28 +1028,29 @@ export default function AdminDashboard() {
   const sectionTitle = { operators: 'Operators', aircraft: 'Aircraft Approvals', employees: 'Employee Approvals', bookings: 'Bookings', payments: 'Payments', queries: 'Queries', feedback: 'Feedback', database: 'Database' }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--navy)' }}>
+    <div className="adm">
       <Sidebar section={section} setSection={setSection} onLogout={logout} counts={counts} />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: '100vh' }}>
+      <div className="adm__content">
         {/* Top bar */}
-        <div style={{ background: 'rgba(12,19,36,0.45)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.1)', padding: '0 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 52, position: 'sticky', top: 0, zIndex: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img src={logo} alt="SkyVayu" style={{ height: 14, width: 'auto', display: 'block' }} />
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '1.5px', textTransform: 'uppercase', background: 'rgba(22,32,64,0.55)', border: '0.5px solid rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: 3, color: 'rgba(255,255,255,0.4)' }}>Super Admin</span>
+        <div className="adm__topbar">
+          <div className="adm__topbar-left">
+            <img className="adm__topbar-logo" src={logo} alt="SkyVayu mark" />
+            <span className="adm__topbar-logo-text">Sky Vayu</span>
+            <span className="adm__topbar-tag">Super Admin</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.5px' }}>
+          <div className="adm__topbar-right">
+            <span className="adm__topbar-email">
               {adminEmail ? `Logged in as ${adminEmail}` : 'Logged in'}
             </span>
-            <button onClick={logout} style={{ height: 30, padding: '0 14px', background: 'transparent', border: '0.5px solid rgba(255,255,255,0.3)', borderRadius: 8, color: 'rgba(255,255,255,0.6)', fontSize: 10, fontFamily: 'var(--font-mono)', letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer' }}>Sign out</button>
+            <button onClick={logout} className="adm__topbar-signout">Sign out</button>
           </div>
         </div>
 
         {/* Content */}
-        <main style={{ flex: 1, padding: '28px 32px', overflowY: 'auto', maxWidth: 1100 }}>
+        <main className="adm__main">
           {section !== 'database' && (
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 400, color: 'var(--gold)', marginBottom: 24 }}>{sectionTitle[section]}</h1>
+            <h1 className="adm__h1">{sectionTitle[section]}</h1>
           )}
           {section === 'operators' && <OperatorsSection onCountChange={mergeCount} />}
           {section === 'aircraft' && <AircraftSection onCountChange={mergeCount} />}
