@@ -25,12 +25,12 @@
   --op-confirmed: #2e7d52;
   --op-sidebar-w: 220px;
 
-  /* Burgundy accent — replaces gold/cyan from the old navy palette.
-     L=64% is the minimum that reads as distinctly coloured against the near-black bg. */
-  --op-accent:    oklch(64% 0.22 18);
-  --op-accent-lt: oklch(72% 0.20 18);
-  --op-accent-bg: oklch(64% 0.22 18 / 0.14);
-  --op-accent-bg2:oklch(64% 0.22 18 / 0.08);
+  /* Burgundy accent — hue 8 stays in true red; hue 18+ drifts to pink/coral.
+     L=56% is bright enough to read on near-black without going garish. */
+  --op-accent:    oklch(56% 0.18 8);
+  --op-accent-lt: oklch(64% 0.15 8);
+  --op-accent-bg: oklch(56% 0.18 8 / 0.16);
+  --op-accent-bg2:oklch(56% 0.18 8 / 0.10);
 
   /* Font overrides — match fleet/about design language */
   --font-display: var(--font-d);
@@ -138,12 +138,12 @@
 
 .op-btn--cyan {
   background: var(--op-accent-bg2);
-  border-color: oklch(64% 0.22 18 / 0.4);
+  border-color: oklch(56% 0.18 8 / 0.45);
   color: var(--op-accent-lt);
 }
 .op-btn--cyan:hover:not(:disabled) {
   background: var(--op-accent-bg);
-  border-color: oklch(64% 0.22 18 / 0.7);
+  border-color: oklch(56% 0.18 8 / 0.7);
 }
 
 .op-btn--ghost {
@@ -184,7 +184,7 @@
 .op-inp:hover { border-color: rgba(255, 255, 255, 0.18); }
 .op-inp:focus {
   border-color: var(--op-accent);
-  background: oklch(64% 0.22 18 / 0.07);
+  background: oklch(56% 0.18 8 / 0.08);
 }
 /* The native picker glyph is black-on-dark by default and effectively invisible. */
 .op-inp[type='datetime-local']::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; cursor: pointer; }
@@ -229,7 +229,7 @@
 .op__brand {
   padding: 24px 20px 20px;
   border-bottom: 1px solid var(--op-line);
-  background: oklch(64% 0.22 18 / 0.06);
+  background: oklch(56% 0.18 8 / 0.07);
 }
 .op__brand-mark { width: fit-content; }
 
@@ -244,7 +244,7 @@
   font-size: 9px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--op-accent-lt);
+  color: rgba(255, 255, 255, 0.35);
   margin-top: 4px;
   text-align: center;
   /* Letter-spacing leaves a trailing gap after the last character, which drags
@@ -273,8 +273,8 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: oklch(64% 0.22 18 / 0.18);
-  border: 1px solid oklch(64% 0.22 18 / 0.4);
+  background: oklch(56% 0.18 8 / 0.18);
+  border: 1px solid oklch(56% 0.18 8 / 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -578,9 +578,9 @@
   margin-bottom: 16px;
 }
 .op-note--info {
-  color: oklch(72% 0.20 18 / 0.9);
-  background: oklch(64% 0.22 18 / 0.10);
-  border: 1px solid oklch(64% 0.22 18 / 0.25);
+  color: oklch(64% 0.15 8 / 0.9);
+  background: oklch(56% 0.18 8 / 0.10);
+  border: 1px solid oklch(56% 0.18 8 / 0.25);
   border-radius: 4px;
   padding: 10px 14px;
   margin-bottom: 0;

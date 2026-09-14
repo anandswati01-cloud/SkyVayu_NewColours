@@ -17,8 +17,8 @@ import logo from '../../assets/skyvayu-wordmark.png'
  * uses it to close itself.
  */
 
-const BURGUNDY = 'oklch(64% 0.22 18)'
-const BURGUNDY_LT = 'oklch(72% 0.20 18)'
+const BURGUNDY = 'oklch(56% 0.18 8)'
+const BURGUNDY_LT = 'oklch(64% 0.15 8)'
 const BG = 'oklch(6% 0.008 10)'
 
 const s = {
