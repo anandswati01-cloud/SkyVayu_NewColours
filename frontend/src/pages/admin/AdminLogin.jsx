@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../services/supabase'
 import { adminApi } from '../../services/api'
-import logo from '../../assets/skyvayu-wordmark.png'
+import logo from '../../assets/sv-new-logo.png'
 
 const ADMIN_EMAIL = 'anandswati01@gmail.com'
 
@@ -53,19 +53,16 @@ export default function AdminLogin() {
     else setForgotMsg({ text: 'Reset link sent! Check your inbox.', type: 'success' })
   }
 
+  const BURGUNDY = 'oklch(70% 0.22 8)'
   const s = {
-    page: { minHeight: '100vh', background: '#0c1324', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, position: 'relative', overflow: 'hidden' },
-    bg: { position: 'absolute', inset: 0, backgroundImage: "url('/airplane.png')", backgroundSize: 'cover', backgroundPosition: '50% 40%', filter: 'brightness(0.35)', zIndex: 0 },
-    overlay: { position: 'absolute', inset: 0, background: 'linear-gradient(rgba(12,19,36,0.5) 0%, rgba(12,19,36,0.65) 55%, #0c1324 100%)', zIndex: 1 },
-    box: { background: 'rgba(12,19,36,0.72)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '0.5px solid rgba(251,191,36,0.18)', borderRadius: 12, padding: '36px 36px', width: '100%', maxWidth: 380, position: 'relative', zIndex: 2, boxShadow: '0 8px 48px rgba(0,0,0,0.5)' },
-    // The card sits on a near-opaque panel over the background photo, so the
-    // white mark holds its edge without the drop shadow the site header needs.
-    mark: { height: 24, width: 'auto', display: 'block', margin: '0 auto 6px' },
-    tag: { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginBottom: 28 },
+    page: { minHeight: '100vh', background: 'oklch(6% 0.008 10)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, position: 'relative', overflow: 'hidden' },
+    bg: { position: 'absolute', inset: 0, backgroundImage: "url('/airplane.png')", backgroundSize: 'cover', backgroundPosition: '50% 40%', filter: 'brightness(0.25)', zIndex: 0 },
+    overlay: { position: 'absolute', inset: 0, background: 'linear-gradient(oklch(6% 0.008 10 / 0.5) 0%, oklch(6% 0.008 10 / 0.7) 55%, oklch(6% 0.008 10) 100%)', zIndex: 1 },
+    box: { background: 'oklch(9% 0.012 10 / 0.9)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: `1px solid oklch(70% 0.22 8 / 0.18)`, borderRadius: 8, padding: '36px 36px', width: '100%', maxWidth: 380, position: 'relative', zIndex: 2, boxShadow: '0 8px 48px rgba(0,0,0,0.5)' },
     label: { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', display: 'block', marginBottom: 7 },
-    input: { width: '100%', height: 44, padding: '0 14px', background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.3)', borderRadius: 8, color: '#fff', fontSize: 14, fontFamily: 'var(--font-body)', outline: 'none' },
-    btn: { width: '100%', height: 44, background: 'var(--gold)', color: '#0c1324', border: 'none', borderRadius: 8, fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 500, letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer', marginTop: 8, transition: 'background 0.2s' },
-    err: { background: 'rgba(226,75,74,0.1)', border: '0.5px solid rgba(226,75,74,0.3)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#e24b4a', marginBottom: 16 },
+    input: { width: '100%', height: 44, padding: '0 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, color: '#fff', fontSize: 14, fontFamily: 'var(--font-b)', outline: 'none' },
+    btn: { width: '100%', height: 44, background: BURGUNDY, color: '#fff', border: 'none', borderRadius: 4, fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 500, letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer', marginTop: 8, transition: 'opacity 0.2s' },
+    err: { background: 'rgba(226,75,74,0.1)', border: '1px solid rgba(226,75,74,0.3)', borderRadius: 4, padding: '10px 14px', fontSize: 13, color: '#e24b4a', marginBottom: 16 },
   }
 
   return (
@@ -73,8 +70,15 @@ export default function AdminLogin() {
       <div style={s.bg} />
       <div style={s.overlay} />
       <div style={s.box}>
-        <img src={logo} alt="SkyVayu" style={s.mark} />
-        <div style={s.tag}>Super Admin Panel</div>
+        {/* Logo unit */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center', marginBottom: 6 }}>
+          <img src={logo} alt="SkyVayu mark" style={{ height: 40, width: 'auto', display: 'block' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <span style={{ fontFamily: 'var(--font-b)', fontSize: 19, fontWeight: 500, letterSpacing: '0.26em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.95)', lineHeight: 1 }}>Sky Vayu</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>Super Admin</span>
+          </div>
+        </div>
+        <div style={{ marginBottom: 28 }} />
 
         {error && <div style={s.err}>{error}</div>}
 
@@ -94,9 +98,9 @@ export default function AdminLogin() {
       {/* Forgot Password Modal */}
       {showForgot && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }} onClick={() => { setShowForgot(false); setForgotMsg({ text: '', type: '' }) }}>
-          <div style={{ background: 'rgba(22,32,64,0.9)', backdropFilter: 'blur(16px)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '36px 32px', width: '100%', maxWidth: 400, position: 'relative' }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: 'oklch(9% 0.012 10)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '36px 32px', width: '100%', maxWidth: 400, position: 'relative' }} onClick={e => e.stopPropagation()}>
             <button onClick={() => setShowForgot(false)} style={{ position: 'absolute', top: 14, right: 16, background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 22, cursor: 'pointer' }}>✕</button>
-            <div style={{ fontFamily: 'var(--font-display)', color: 'var(--gold)', fontSize: 20, marginBottom: 6 }}>Reset Password</div>
+            <div style={{ fontFamily: 'var(--font-d)', color: 'oklch(70% 0.22 8)', fontSize: 20, marginBottom: 6 }}>Reset Password</div>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 18 }}>Enter your admin email and we'll send a reset link.</p>
             <input style={{ ...s.input, marginBottom: 12 }} type="email" placeholder="Enter your email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} />
             <button style={{ ...s.btn, marginTop: 0 }} onClick={sendReset}>Send reset link</button>
