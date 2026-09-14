@@ -10,10 +10,10 @@
   --adm-line-2:     rgba(255, 255, 255, 0.09);
   --adm-fill:       rgba(255, 255, 255, 0.03);
   --adm-dim:        rgba(255, 255, 255, 0.4);
-  --adm-accent:     oklch(70% 0.22 8);
-  --adm-accent-lt:  oklch(78% 0.18 8);
-  --adm-accent-bg:  oklch(70% 0.22 8 / 0.14);
-  --adm-accent-dim: oklch(70% 0.22 8 / 0.08);
+  --adm-accent:     oklch(62% 0.20 8);
+  --adm-accent-lt:  oklch(70% 0.18 8);
+  --adm-accent-bg:  oklch(62% 0.20 8 / 0.14);
+  --adm-accent-dim: oklch(62% 0.20 8 / 0.08);
   --adm-ok:         #4caf50;
   --adm-warn:       #f59e0b;
   --adm-bad:        #e24b4a;

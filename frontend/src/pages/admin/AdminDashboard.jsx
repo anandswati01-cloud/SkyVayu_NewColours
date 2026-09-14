@@ -185,7 +185,7 @@ function OperatorsSection({ onCountChange }) {
       <div style={{ display: 'flex', borderBottom: '0.5px solid rgba(255,255,255,0.1)', marginBottom: 20 }}>
         {[['pending', 'Pending applications'], ['approved', 'Approved operators'], ['rejected', 'Rejected']].map(([key, label]) => (
           <button key={key} style={tabStyle(tab === key)} onClick={() => setTab(key)}>
-            {label} <span style={{ background: 'oklch(70% 0.22 8 / 0.14)', color: 'var(--adm-accent)', padding: '1px 6px', borderRadius: 10, fontSize: 10 }}>{counts[key]}</span>
+            {label} <span style={{ background: 'oklch(62% 0.20 8 / 0.14)', color: 'var(--adm-accent)', padding: '1px 6px', borderRadius: 10, fontSize: 10 }}>{counts[key]}</span>
           </button>
         ))}
       </div>
@@ -220,7 +220,7 @@ function OperatorsSection({ onCountChange }) {
             {/* AOP Document */}
             {op.aop_document_url ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: 'rgba(255,255,255,0.04)', borderRadius: 8, border: '0.5px solid rgba(255,255,255,0.1)', marginBottom: 14 }}>
-                <div style={{ width: 32, height: 32, background: 'oklch(70% 0.22 8 / 0.08)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>📄</div>
+                <div style={{ width: 32, height: 32, background: 'oklch(62% 0.20 8 / 0.08)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>📄</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 500 }}>{op.aop_document_name || "Air Operator's Permit"}</div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>AOP{op.aop_expiry_date ? ` · Expiry: ${fmtDate(op.aop_expiry_date)}` : ''}</div>
@@ -959,7 +959,7 @@ function DatabaseSection() {
       <div style={{ display: 'flex', borderBottom: '0.5px solid rgba(255,255,255,0.1)', marginBottom: 0, overflowX: 'auto' }}>
         {TABS.map(t => (
           <button key={t.key} style={tabStyle(tab === t.key)} onClick={() => setTab(t.key)}>
-            {t.key} {data[t.key] ? <span style={{ background: 'oklch(70% 0.22 8 / 0.14)', color: 'var(--adm-accent)', padding: '1px 5px', borderRadius: 8, fontSize: 9, marginLeft: 4 }}>{data[t.key].length}</span> : ''}
+            {t.key} {data[t.key] ? <span style={{ background: 'oklch(62% 0.20 8 / 0.14)', color: 'var(--adm-accent)', padding: '1px 5px', borderRadius: 8, fontSize: 9, marginLeft: 4 }}>{data[t.key].length}</span> : ''}
           </button>
         ))}
       </div>
