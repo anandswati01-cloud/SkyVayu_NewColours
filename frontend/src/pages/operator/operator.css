@@ -234,11 +234,22 @@
 }
 .op__brand-mark { width: fit-content; }
 
-/* The same mark the customer site uses, rather than a typeset wordmark that
-   drifts from it. It is white on transparent and sits on a solid panel here, so
-   unlike the site header it needs no drop shadow to hold its edge. Height is
-   set for the wordmark-only asset — see the note on .nav__logo img. */
-.op__logo { height: 48px; width: auto; display: block; margin-inline: auto; max-width: 100%; }
+.op__logo-unit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+.op__logo { height: 32px; width: auto; display: block; max-width: 100%; }
+.op__logo-text {
+  font-family: var(--font-b);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 1;
+}
 
 .op__brand-sub {
   font-family: var(--font-mono);
@@ -667,13 +678,27 @@
     top: 0;
     z-index: 100;
   }
+  .op__bar-logo-unit {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-left: auto;
+    margin-right: 4px;
+    opacity: 0.9;
+  }
   .op__bar-logo {
     height: 18px;
     width: auto;
     display: block;
-    margin-left: auto;
-    margin-right: 4px;
-    opacity: 0.9;
+  }
+  .op__bar-logo-text {
+    font-family: var(--font-b);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.92);
+    line-height: 1;
   }
   .op__burger {
     background: none;

@@ -47,7 +47,10 @@ function Sidebar({ section, setSection, user, operator, onLogout, isOwner, open 
         {/* Wrapper shrinks to the mark's width so the caption centres under the
             logo rather than under the full sidebar. */}
         <div className="op__brand-mark">
-          <img className="op__logo" src={logo} alt="SkyVayu" />
+          <div className="op__logo-unit">
+            <img className="op__logo" src={logo} alt="SkyVayu mark" />
+            <span className="op__logo-text">Sky Vayu</span>
+          </div>
           <div className="op__brand-sub">Operator Portal</div>
         </div>
       </div>
@@ -626,7 +629,10 @@ export default function OperatorDashboard() {
       <div className="op__bar">
         <button className="op__burger" onClick={() => setNavOpen(o => !o)} aria-label="Menu" aria-expanded={navOpen}>☰</button>
         <span className="op__bar-title">{current?.label || 'Operator Portal'}</span>
-        <img className="op__bar-logo" src={logo} alt="SkyVayu" />
+        <div className="op__bar-logo-unit">
+          <img className="op__bar-logo" src={logo} alt="SkyVayu mark" />
+          <span className="op__bar-logo-text">Sky Vayu</span>
+        </div>
       </div>
 
       <main className="op__main">
