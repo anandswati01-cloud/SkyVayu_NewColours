@@ -3,10 +3,12 @@ import { useNavigate, Link } from 'react-router-dom'
 import { paymentApi } from '../services/api'
 import { showToast } from '../components/ui/Toast'
 import useAuthStore from '../store/authStore'
+import logo from '../assets/sv-new-logo.png'
 
 function fmt(n) { return '₹' + Number(n || 0).toLocaleString('en-IN') }
 
 const CHECKOUT_SRC = 'https://checkout.razorpay.com/v1/checkout.js'
+const BURGUNDY = 'oklch(62% 0.20 8)'
 
 /** Load Razorpay's checkout script once, on demand. */
 function loadCheckout() {
@@ -97,7 +99,7 @@ export default function Payment() {
         name: 'SkyVayu',
         description: `Charter booking ${order.data.bookingRef}`,
         prefill: { name, email, contact: phone },
-        theme: { color: '#fbbf24' },
+        theme: { color: '#8a1f2e' },
         handler: async (response) => {
           try {
             const verified = await paymentApi.verify({
@@ -141,75 +143,87 @@ export default function Payment() {
     }
   }
 
-  const inputStyle = { background: 'var(--white-10)', border: '1px solid var(--white-10)', borderRadius: 2, padding: '12px 16px', color: 'var(--white)', fontFamily: 'var(--font-body)', fontSize: 15, outline: 'none', width: '100%' }
-  const labelStyle = { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--white-60)', marginBottom: 8, display: 'block' }
+  const inputStyle = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 2, padding: '12px 16px', color: 'rgba(255,255,255,0.95)', fontFamily: 'var(--font-b)', fontSize: 15, outline: 'none', width: '100%' }
+  const labelStyle = { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: 8, display: 'block' }
   const errStyle = { color: '#e05f5f', fontSize: 12, marginTop: 4 }
-  const policyLink = { color: 'var(--white-60)', textDecoration: 'underline' }
+  const policyLink = { color: 'rgba(255,255,255,0.45)', textDecoration: 'underline' }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--navy)', paddingTop: 72, display: 'flex', justifyContent: 'center', padding: '100px 48px 48px' }}>
-      <div style={{ maxWidth: 900, width: '100%', display: 'grid', gridTemplateColumns: '1fr 380px', gap: 32 }}>
+    <div style={{ minHeight: '100vh', background: 'oklch(6% 0.008 10)', display: 'flex', justifyContent: 'center', padding: '100px 48px 48px' }}>
+      <div style={{ maxWidth: 900, width: '100%' }}>
 
-        {/* Left — details */}
-        <div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 8 }}>Complete Booking</div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 40, fontWeight: 400, marginBottom: 32 }}>Traveller Details</h1>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 32 }}>
-            <div>
-              <label style={labelStyle}>Full Name</label>
-              <input value={name} onChange={e => setName(e.target.value)} style={inputStyle} placeholder="Your full name"
-                onFocus={e => e.target.style.borderColor = 'var(--gold)'} onBlur={e => e.target.style.borderColor = 'var(--white-10)'} />
-              {errors.name && <div style={errStyle}>{errors.name}</div>}
-            </div>
-            <div>
-              <label style={labelStyle}>Email Address</label>
-              <input value={email} onChange={e => setEmail(e.target.value)} type="email" style={inputStyle} placeholder="your@email.com"
-                onFocus={e => e.target.style.borderColor = 'var(--gold)'} onBlur={e => e.target.style.borderColor = 'var(--white-10)'} />
-              {errors.email && <div style={errStyle}>{errors.email}</div>}
-            </div>
-            <div>
-              <label style={labelStyle}>Phone Number</label>
-              <input value={phone} onChange={e => setPhone(e.target.value)} type="tel" style={inputStyle} placeholder="+91 98765 43210"
-                onFocus={e => e.target.style.borderColor = 'var(--gold)'} onBlur={e => e.target.style.borderColor = 'var(--white-10)'} />
-              {errors.phone && <div style={errStyle}>{errors.phone}</div>}
-            </div>
+        {/* Logo unit */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 48 }}>
+          <img src={logo} alt="SkyVayu mark" style={{ height: 40, width: 'auto', display: 'block' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <span style={{ fontFamily: 'var(--font-b)', fontSize: 17, fontWeight: 500, letterSpacing: '0.26em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.95)', lineHeight: 1 }}>Sky Vayu</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>Private Charter</span>
           </div>
-
-          <button onClick={startPayment} disabled={loading}
-            style={{ display: 'flex', alignItems: 'center', gap: 12, background: loading ? 'rgba(251,191,36,0.5)' : 'var(--gold)', color: 'var(--navy)', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '16px 32px', borderRadius: 2, cursor: loading ? 'not-allowed' : 'pointer', border: 'none', fontWeight: 500, width: '100%', justifyContent: 'center' }}>
-            {loading ? 'Opening payment…' : `Confirm & Pay ${fmt(price)}`}
-          </button>
-          {/* Linked, not just named. The customer is one click from paying, so
-              the cancellation terms have to be reachable from here — and
-              Razorpay's review checks for exactly this on a checkout page. */}
-          <p style={{ fontSize: 12, color: 'var(--white-30)', marginTop: 12, textAlign: 'center', lineHeight: 1.7 }}>
-            By confirming, you agree to our <Link to="/terms" style={policyLink}>Terms of Service</Link>,{' '}
-            <Link to="/privacy" style={policyLink}>Privacy Policy</Link> and{' '}
-            <Link to="/refunds" style={policyLink}>Refund &amp; Cancellation Policy</Link>.
-          </p>
         </div>
 
-        {/* Right — summary */}
-        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--white-10)', borderRadius: 4, padding: 28, height: 'fit-content', position: 'sticky', top: 100 }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 20 }}>Booking Summary</div>
-          {[
-            ['Route', route],
-            ['Aircraft', quote.aircraft_type || '—'],
-            ['Operator', quote.operator_name || '—'],
-            ['Date', query.flight_date ? `${query.flight_date}${query.flight_time ? ', ' + query.flight_time : ''}` : '—'],
-            ['Passengers', query.passengers ? `${query.passengers} Pax` : '—'],
-          ].map(([k, v]) => (
-            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: 14 }}>
-              <span style={{ color: 'var(--white-60)' }}>{k}</span>
-              <span style={{ color: 'var(--white)', fontWeight: 500 }}>{v}</span>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 32 }}>
+
+          {/* Left — details */}
+          <div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: BURGUNDY, marginBottom: 8 }}>Complete Booking</div>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 40, fontWeight: 400, color: 'rgba(255,255,255,0.95)', marginBottom: 32 }}>Traveller Details</h1>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 32 }}>
+              <div>
+                <label style={labelStyle}>Full Name</label>
+                <input value={name} onChange={e => setName(e.target.value)} style={inputStyle} placeholder="Your full name"
+                  onFocus={e => e.target.style.borderColor = BURGUNDY} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.10)'} />
+                {errors.name && <div style={errStyle}>{errors.name}</div>}
+              </div>
+              <div>
+                <label style={labelStyle}>Email Address</label>
+                <input value={email} onChange={e => setEmail(e.target.value)} type="email" style={inputStyle} placeholder="your@email.com"
+                  onFocus={e => e.target.style.borderColor = BURGUNDY} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.10)'} />
+                {errors.email && <div style={errStyle}>{errors.email}</div>}
+              </div>
+              <div>
+                <label style={labelStyle}>Phone Number</label>
+                <input value={phone} onChange={e => setPhone(e.target.value)} type="tel" style={inputStyle} placeholder="+91 98765 43210"
+                  onFocus={e => e.target.style.borderColor = BURGUNDY} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.10)'} />
+                {errors.phone && <div style={errStyle}>{errors.phone}</div>}
+              </div>
             </div>
-          ))}
-          <div style={{ borderTop: '1px solid var(--white-10)', paddingTop: 16, marginTop: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--white-60)' }}>Total</span>
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: 'var(--gold)' }}>{fmt(price)}</span>
+
+            <button onClick={startPayment} disabled={loading}
+              style={{ display: 'flex', alignItems: 'center', gap: 12, background: loading ? 'oklch(62% 0.20 8 / 0.5)' : BURGUNDY, color: '#fff', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '16px 32px', borderRadius: 2, cursor: loading ? 'not-allowed' : 'pointer', border: 'none', fontWeight: 500, width: '100%', justifyContent: 'center' }}>
+              {loading ? 'Opening payment…' : `Confirm & Pay ${fmt(price)}`}
+            </button>
+            {/* Linked, not just named. The customer is one click from paying, so
+                the cancellation terms have to be reachable from here — and
+                Razorpay's review checks for exactly this on a checkout page. */}
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.30)', marginTop: 12, textAlign: 'center', lineHeight: 1.7 }}>
+              By confirming, you agree to our <Link to="/terms" style={policyLink}>Terms of Service</Link>,{' '}
+              <Link to="/privacy" style={policyLink}>Privacy Policy</Link> and{' '}
+              <Link to="/refunds" style={policyLink}>Refund &amp; Cancellation Policy</Link>.
+            </p>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--white-30)', marginTop: 8, textAlign: 'right' }}>Inclusive of GST (18%)</div>
+
+          {/* Right — summary */}
+          <div style={{ background: 'oklch(9% 0.012 10)', border: `1px solid oklch(62% 0.20 8 / 0.18)`, borderRadius: 4, padding: 28, height: 'fit-content', position: 'sticky', top: 100 }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: BURGUNDY, marginBottom: 20 }}>Booking Summary</div>
+            {[
+              ['Route', route],
+              ['Aircraft', quote.aircraft_type || '—'],
+              ['Operator', quote.operator_name || '—'],
+              ['Date', query.flight_date ? `${query.flight_date}${query.flight_time ? ', ' + query.flight_time : ''}` : '—'],
+              ['Passengers', query.passengers ? `${query.passengers} Pax` : '—'],
+            ].map(([k, v]) => (
+              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: 14 }}>
+                <span style={{ color: 'rgba(255,255,255,0.55)' }}>{k}</span>
+                <span style={{ color: 'rgba(255,255,255,0.95)', fontWeight: 500 }}>{v}</span>
+              </div>
+            ))}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 16, marginTop: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>Total</span>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: BURGUNDY }}>{fmt(price)}</span>
+            </div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.30)', marginTop: 8, textAlign: 'right' }}>Inclusive of GST (18%)</div>
+          </div>
         </div>
       </div>
     </div>
