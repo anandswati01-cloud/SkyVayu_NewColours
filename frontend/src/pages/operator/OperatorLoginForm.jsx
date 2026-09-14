@@ -17,19 +17,22 @@ import logo from '../../assets/skyvayu-wordmark.png'
  * uses it to close itself.
  */
 
+const BURGUNDY = 'oklch(52% 0.18 20)'
+const BURGUNDY_LT = 'oklch(60% 0.18 20)'
+const BG = 'oklch(6% 0.008 10)'
+
 const s = {
   box: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '40px 40px', width: '100%', maxWidth: 400 },
   logo: { textAlign: 'center', marginBottom: 32 },
-  // The site's own mark, so the card matches the header it opens from.
   mark: { height: 25, width: 'auto', display: 'block', margin: '0 auto' },
   sub: { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginTop: 6 },
-  title: { fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 400, marginBottom: 6, textAlign: 'center' },
+  title: { fontFamily: 'var(--font-d)', fontSize: 24, fontWeight: 400, marginBottom: 6, textAlign: 'center' },
   desc: { fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: 28 },
   label: { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: 8, display: 'block' },
-  input: { width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, padding: '11px 14px', color: '#fff', fontFamily: 'var(--font-body)', fontSize: 14, outline: 'none', marginBottom: 20 },
-  btn: { width: '100%', background: 'var(--gold)', color: '#0c1324', border: 'none', borderRadius: 4, padding: '13px', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600, marginTop: 4 },
+  input: { width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, padding: '11px 14px', color: '#fff', fontFamily: 'var(--font-b)', fontSize: 14, outline: 'none', marginBottom: 20 },
+  btn: { width: '100%', background: BURGUNDY, color: '#fff', border: 'none', borderRadius: 4, padding: '13px', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600, marginTop: 4 },
   err: { background: 'rgba(226,75,74,0.1)', border: '1px solid rgba(226,75,74,0.3)', borderRadius: 4, padding: '10px 14px', fontSize: 13, color: '#e24b4a', marginBottom: 20 },
-  link: { background: 'none', border: 'none', color: 'var(--gold)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline', padding: 0 },
+  link: { background: 'none', border: 'none', color: BURGUNDY_LT, fontSize: 12, cursor: 'pointer', textDecoration: 'underline', padding: 0 },
 }
 
 export default function OperatorLoginForm({ onSuccess }) {
@@ -74,13 +77,13 @@ export default function OperatorLoginForm({ onSuccess }) {
         <label style={s.label}>Username or Email</label>
         <input style={s.input} type="text" placeholder="Enter your username or email" value={username} onChange={e => setUsername(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && doLogin()}
-          onFocus={e => e.target.style.borderColor = 'var(--gold)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+          onFocus={e => e.target.style.borderColor = BURGUNDY} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
 
         <label style={s.label}>Password</label>
         <div style={{ position: 'relative', marginBottom: 4 }}>
           <input style={{ ...s.input, marginBottom: 0, paddingRight: 44 }} type={showPw ? 'text' : 'password'} placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && doLogin()}
-            onFocus={e => e.target.style.borderColor = 'var(--gold)'} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
+            onFocus={e => e.target.style.borderColor = BURGUNDY} onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'} />
           <button onClick={() => setShowPw(!showPw)} style={{ position: 'absolute', right: 12, top: 11, background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 16 }}>
             {showPw ? '🙈' : '👁'}
           </button>
@@ -96,7 +99,7 @@ export default function OperatorLoginForm({ onSuccess }) {
 
         <div style={{ textAlign: 'center', marginTop: 20 }}>
           <button onClick={() => setShowReg(true)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 12, cursor: 'pointer' }}>
-            New operator? <span style={{ color: 'var(--gold)', textDecoration: 'underline' }}>Register your company</span>
+            New operator? <span style={{ color: BURGUNDY_LT, textDecoration: 'underline' }}>Register your company</span>
           </button>
         </div>
       </div>
@@ -104,7 +107,7 @@ export default function OperatorLoginForm({ onSuccess }) {
       {/* Forgot Password Modal */}
       {showForgot && (
         <div onClick={() => setShowForgot(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 99999 }}>
-          <div style={{ position: 'relative', width: '400px', background: '#111827', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '30px' }} onClick={e => e.stopPropagation()}>
+          <div style={{ position: 'relative', width: '400px', background: 'oklch(9% 0.012 10)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '30px' }} onClick={e => e.stopPropagation()}>
             <button
               onClick={() => setShowForgot(false)}
               style={{ position: 'absolute', top: 12, right: 15, background: 'transparent', border: 'none', color: '#fff', fontSize: 22, cursor: 'pointer' }}>
@@ -158,25 +161,25 @@ function RegisterModal({ onClose }) {
 
   const s2 = {
     overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100000, overflowY: 'auto', padding: 24 },
-    modal: { background: '#0f1a30', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '32px', width: '100%', maxWidth: 480, margin: 'auto' },
+    modal: { background: 'oklch(9% 0.012 10)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '32px', width: '100%', maxWidth: 480, margin: 'auto' },
     hdr: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-    inp: { width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, padding: '11px 14px', color: '#fff', fontFamily: 'var(--font-body)', fontSize: 14, outline: 'none', marginBottom: 16 },
+    inp: { width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, padding: '11px 14px', color: '#fff', fontFamily: 'var(--font-b)', fontSize: 14, outline: 'none', marginBottom: 16 },
   }
 
   return (
     <div style={s2.overlay} onClick={onClose}>
       <div style={s2.modal} onClick={e => e.stopPropagation()}>
         <div style={s2.hdr}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 20 }}>Register your company</div>
+          <div style={{ fontFamily: 'var(--font-d)', fontSize: 20 }}>Register your company</div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 20, cursor: 'pointer' }}>✕</button>
         </div>
 
         {success ? (
           <div style={{ textAlign: 'center', padding: '24px 0' }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>✓</div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--gold)', marginBottom: 12 }}>Registration submitted</div>
+            <div style={{ fontFamily: 'var(--font-d)', fontSize: 22, color: BURGUNDY, marginBottom: 12 }}>Registration submitted</div>
             <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, marginBottom: 24 }}>Your registration is under review. You will be able to log in once approved by SkyVayu.</div>
-            <button onClick={onClose} style={{ background: 'var(--gold)', color: '#0c1324', border: 'none', padding: '10px 24px', borderRadius: 4, fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer' }}>Back to Login</button>
+            <button onClick={onClose} style={{ background: BURGUNDY, color: '#fff', border: 'none', padding: '10px 24px', borderRadius: 4, fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer' }}>Back to Login</button>
           </div>
         ) : (
           <>
@@ -204,7 +207,7 @@ function RegisterModal({ onClose }) {
                 }} />
               </div>
             ))}
-            <button onClick={submit} disabled={loading} style={{ width: '100%', background: 'var(--gold)', color: '#0c1324', border: 'none', borderRadius: 4, padding: 13, fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600, opacity: loading ? 0.6 : 1, marginTop: 4 }}>
+            <button onClick={submit} disabled={loading} style={{ width: '100%', background: BURGUNDY, color: '#fff', border: 'none', borderRadius: 4, padding: 13, fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600, opacity: loading ? 0.6 : 1, marginTop: 4 }}>
               {loading ? 'Submitting…' : 'Submit application'}
             </button>
           </>

@@ -11,19 +11,29 @@
    operator has 60 minutes to answer a query and could not do it from a phone. */
 
 .op {
-  --op-bg: #0a0f1e;
-  --op-panel: #0f1a30;
-  --op-line: rgba(255, 255, 255, 0.06);
-  --op-line-2: rgba(255, 255, 255, 0.08);
-  --op-fill: rgba(255, 255, 255, 0.03);
-  --op-fill-2: rgba(255, 255, 255, 0.06);
-  --op-dim: rgba(255, 255, 255, 0.4);
-  --op-dim-2: rgba(255, 255, 255, 0.5);
-  --op-ok: #4caf50;
-  --op-warn: #f59e0b;
-  --op-bad: #e24b4a;
+  --op-bg:      oklch(6% 0.008 10);
+  --op-panel:   oklch(9% 0.012 10);
+  --op-line:    rgba(255, 255, 255, 0.06);
+  --op-line-2:  rgba(255, 255, 255, 0.08);
+  --op-fill:    rgba(255, 255, 255, 0.03);
+  --op-fill-2:  rgba(255, 255, 255, 0.05);
+  --op-dim:     rgba(255, 255, 255, 0.4);
+  --op-dim-2:   rgba(255, 255, 255, 0.5);
+  --op-ok:      #4caf50;
+  --op-warn:    #f59e0b;
+  --op-bad:     #e24b4a;
   --op-confirmed: #2e7d52;
   --op-sidebar-w: 220px;
+
+  /* Burgundy accent — replaces gold/cyan from the old navy palette */
+  --op-accent:    oklch(52% 0.18 20);
+  --op-accent-lt: oklch(60% 0.18 20);
+  --op-accent-bg: oklch(52% 0.18 20 / 0.10);
+  --op-accent-bg2:oklch(52% 0.18 20 / 0.06);
+
+  /* Font overrides — match fleet/about design language */
+  --font-display: var(--font-d);
+  --font-body:    var(--font-b);
 
   display: flex;
   min-height: 100vh;
@@ -96,7 +106,7 @@
 .op-price {
   font-family: var(--font-display);
   font-size: 22px;
-  color: var(--gold);
+  color: var(--op-accent);
   white-space: nowrap;
 }
 
@@ -116,23 +126,23 @@
   white-space: nowrap;
 }
 .op-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-.op-btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.op-btn:focus-visible { outline: 2px solid var(--op-accent); outline-offset: 2px; }
 
 .op-btn--gold {
-  background: var(--gold);
-  color: #0c1324;
+  background: var(--op-accent);
+  color: #fff;
   font-weight: 600;
 }
-.op-btn--gold:hover:not(:disabled) { background: var(--gold-light); }
+.op-btn--gold:hover:not(:disabled) { background: var(--op-accent-lt); }
 
 .op-btn--cyan {
-  background: rgba(23, 176, 214, 0.15);
-  border-color: rgba(23, 176, 214, 0.4);
-  color: var(--cyan);
+  background: var(--op-accent-bg2);
+  border-color: oklch(52% 0.18 20 / 0.4);
+  color: var(--op-accent-lt);
 }
 .op-btn--cyan:hover:not(:disabled) {
-  background: rgba(23, 176, 214, 0.28);
-  border-color: rgba(23, 176, 214, 0.7);
+  background: var(--op-accent-bg);
+  border-color: oklch(52% 0.18 20 / 0.7);
 }
 
 .op-btn--ghost {
@@ -172,8 +182,8 @@
 .op-inp::placeholder { color: rgba(255, 255, 255, 0.3); }
 .op-inp:hover { border-color: rgba(255, 255, 255, 0.18); }
 .op-inp:focus {
-  border-color: var(--cyan);
-  background: rgba(23, 176, 214, 0.06);
+  border-color: var(--op-accent);
+  background: oklch(52% 0.18 20 / 0.06);
 }
 /* The native picker glyph is black-on-dark by default and effectively invisible. */
 .op-inp[type='datetime-local']::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; cursor: pointer; }
@@ -252,20 +262,20 @@
   font-family: inherit;
 }
 .op__me:hover { background: rgba(255, 255, 255, 0.03); }
-.op__me:focus-visible { outline: 2px solid var(--cyan); outline-offset: -2px; }
+.op__me:focus-visible { outline: 2px solid var(--op-accent); outline-offset: -2px; }
 
 .op__avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(251, 191, 36, 0.15);
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  background: oklch(52% 0.18 20 / 0.15);
+  border: 1px solid oklch(52% 0.18 20 / 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--gold);
+  color: var(--op-accent);
   flex-shrink: 0;
 }
 
@@ -294,11 +304,11 @@
   transition: color 0.18s, background 0.18s, border-color 0.18s;
 }
 .op__nav-item:hover { color: #fff; background: rgba(255, 255, 255, 0.03); }
-.op__nav-item:focus-visible { outline: 2px solid var(--cyan); outline-offset: -2px; }
+.op__nav-item:focus-visible { outline: 2px solid var(--op-accent); outline-offset: -2px; }
 .op__nav-item.is-active {
-  color: var(--gold);
-  background: rgba(251, 191, 36, 0.06);
-  border-left-color: var(--gold);
+  color: var(--op-accent);
+  background: var(--op-accent-bg2);
+  border-left-color: var(--op-accent);
 }
 /* Stroke icons inherit the nav item's colour, so they pick up the gold active
    state and the white hover state without any per-state rules. */
@@ -329,7 +339,7 @@
   transition: background 0.18s, color 0.18s, border-color 0.18s;
 }
 .op__signout:hover { background: rgba(226, 75, 74, 0.12); border-color: rgba(226, 75, 74, 0.4); color: var(--op-bad); }
-.op__signout:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.op__signout:focus-visible { outline: 2px solid var(--op-accent); outline-offset: 2px; }
 
 /* ── Main column ──────────────────────────────────────────────────────────── */
 .op__main {
@@ -378,11 +388,11 @@
   transition: color 0.18s, background 0.18s, border-color 0.18s;
 }
 .op-tab:hover { color: rgba(255, 255, 255, 0.75); }
-.op-tab:focus-visible { outline: 2px solid var(--cyan); outline-offset: -2px; }
+.op-tab:focus-visible { outline: 2px solid var(--op-accent); outline-offset: -2px; }
 .op-tab.is-active {
-  background: rgba(251, 191, 36, 0.1);
-  color: var(--gold);
-  border-bottom-color: var(--gold);
+  background: var(--op-accent-bg);
+  color: var(--op-accent);
+  border-bottom-color: var(--op-accent);
 }
 .op-tab__count {
   margin-left: 6px;
@@ -421,7 +431,7 @@
 }
 .op-panel__k { margin-bottom: 12px; }
 .op-panel__hd { margin-bottom: 16px; }
-.op-panel__v { font-family: var(--font-display); font-size: 32px; color: var(--gold); }
+.op-panel__v { font-family: var(--font-display); font-size: 32px; color: var(--op-accent); }
 .op-panel-grid { margin-bottom: 32px; }
 
 .op-kv {
@@ -465,7 +475,7 @@
   transition: color 0.18s, background 0.18s;
 }
 .op-x:hover { color: var(--op-bad); background: rgba(226, 75, 74, 0.12); }
-.op-x:focus-visible { outline: 2px solid var(--cyan); outline-offset: 1px; }
+.op-x:focus-visible { outline: 2px solid var(--op-accent); outline-offset: 1px; }
 
 /* ── Modal ────────────────────────────────────────────────────────────────── */
 .op-modal {
@@ -515,7 +525,7 @@
   transition: color 0.18s, background 0.18s;
 }
 .op-modal__x:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
-.op-modal__x:focus-visible { outline: 2px solid var(--cyan); outline-offset: 1px; }
+.op-modal__x:focus-visible { outline: 2px solid var(--op-accent); outline-offset: 1px; }
 
 .op-modal__body { padding: 24px; }
 .op-modal__ft {
@@ -549,7 +559,7 @@
 
 .op-sum { display: flex; justify-content: space-between; color: rgba(255, 255, 255, 0.6); margin-bottom: 4px; }
 .op-sum--total {
-  color: var(--gold);
+  color: var(--op-accent);
   font-family: var(--font-display);
   font-size: 18px;
   margin-top: 8px;
@@ -563,9 +573,9 @@
   margin-bottom: 16px;
 }
 .op-note--info {
-  color: rgba(23, 176, 214, 0.7);
-  background: rgba(23, 176, 214, 0.08);
-  border: 1px solid rgba(23, 176, 214, 0.2);
+  color: oklch(52% 0.18 20 / 0.85);
+  background: oklch(52% 0.18 20 / 0.08);
+  border: 1px solid oklch(52% 0.18 20 / 0.2);
   border-radius: 4px;
   padding: 10px 14px;
   margin-bottom: 0;
@@ -603,7 +613,7 @@
 
 .op-loading {
   min-height: 100vh;
-  background: #0a0f1e;
+  background: oklch(6% 0.008 10);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -661,13 +671,13 @@
     padding: 7px 11px;
     cursor: pointer;
   }
-  .op__burger:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  .op__burger:focus-visible { outline: 2px solid var(--op-accent); outline-offset: 2px; }
   .op__bar-title {
     font-family: var(--font-mono);
     font-size: 11px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: var(--gold);
+    color: var(--op-accent);
   }
 
   .op__main { padding: 24px 20px 48px; }
