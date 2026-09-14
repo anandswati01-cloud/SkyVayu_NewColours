@@ -4,7 +4,7 @@ import useAuthStore from '../../store/authStore'
 import { signInWithGoogle, signInAsDevUser } from '../../services/supabase'
 import { showToast } from '../ui/Toast'
 import OperatorLoginForm from '../../pages/operator/OperatorLoginForm'
-import logo from '../../assets/skyvayu-wordmark.png'
+import logo from '../../assets/sv-new-logo.png'
 import './layout.css'
 
 // The header mirrors the previous charter site. These three are plain
@@ -69,7 +69,10 @@ export default function Navbar() {
       <nav className={`nav${scrolled ? ' scrolled' : ''}`}>
         <div className="nav__i">
           <Link to="/" className="nav__logo" aria-label="SkyVayu — home">
-            <img src={logo} alt="SkyVayu" />
+            <img src={logo} alt="SkyVayu mark" />
+            <div className="nav__wordmark">
+              <span className="nav__brand">Sky Vayu</span>
+            </div>
           </Link>
 
           <ul className="nav__links">

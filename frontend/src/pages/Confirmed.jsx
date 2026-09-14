@@ -1,26 +1,16 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { generateInvoice } from '../utils/invoice'
-import logo from '../assets/sv-new-logo.png'
-
 const BURGUNDY = 'oklch(62% 0.20 8)'
 
 export default function Confirmed() {
   const [booking] = useState(() => { try { return JSON.parse(sessionStorage.getItem('sv_booking') || '{}') } catch { return {} } })
 
   return (
-    <div style={{ minHeight: '100vh', background: 'oklch(6% 0.008 10)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '100px 48px' }}>
-
-      {/* Logo unit — top left */}
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, padding: '20px 40px', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <img src={logo} alt="SkyVayu mark" style={{ height: 36, width: 'auto', display: 'block' }} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <span style={{ fontFamily: 'var(--font-b)', fontSize: 15, fontWeight: 500, letterSpacing: '0.26em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.95)', lineHeight: 1 }}>Sky Vayu</span>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>Private Charter</span>
-        </div>
-      </div>
+    <div style={{ minHeight: '100vh', background: 'oklch(6% 0.008 10)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '100px 48px' }}>
 
       <div style={{ maxWidth: 560, width: '100%', textAlign: 'center' }}>
+
         <div style={{ width: 80, height: 80, background: 'rgba(46,125,82,0.12)', border: '1px solid rgba(46,125,82,0.4)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, margin: '0 auto 32px' }}>✓</div>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: BURGUNDY, marginBottom: 16 }}>Booking Confirmed</div>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 48, fontWeight: 400, color: 'rgba(255,255,255,0.95)', marginBottom: 16 }}>You're all set!</h1>

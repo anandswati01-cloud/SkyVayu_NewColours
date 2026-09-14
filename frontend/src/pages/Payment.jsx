@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom'
 import { paymentApi } from '../services/api'
 import { showToast } from '../components/ui/Toast'
 import useAuthStore from '../store/authStore'
-import logo from '../assets/sv-new-logo.png'
 
 function fmt(n) { return '₹' + Number(n || 0).toLocaleString('en-IN') }
 
@@ -151,15 +150,6 @@ export default function Payment() {
   return (
     <div style={{ minHeight: '100vh', background: 'oklch(6% 0.008 10)', display: 'flex', justifyContent: 'center', padding: '100px 48px 48px' }}>
       <div style={{ maxWidth: 900, width: '100%' }}>
-
-        {/* Logo unit */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 48 }}>
-          <img src={logo} alt="SkyVayu mark" style={{ height: 40, width: 'auto', display: 'block' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <span style={{ fontFamily: 'var(--font-b)', fontSize: 17, fontWeight: 500, letterSpacing: '0.26em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.95)', lineHeight: 1 }}>Sky Vayu</span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>Private Charter</span>
-          </div>
-        </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 32 }}>
 
