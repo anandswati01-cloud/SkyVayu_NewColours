@@ -2,18 +2,19 @@
    but kept in a separate file so changes to one do not silently break the other. */
 
 .adm {
-  --adm-bg:         oklch(6% 0.008 10);
-  --adm-panel:      oklch(9% 0.012 10);
-  --adm-sidebar:    oklch(10% 0.04 8);
-  --adm-card:       oklch(11% 0.018 10);
+  --adm-bg:         #160a0d;
+  --adm-panel:      #1a0c10;
+  --adm-sidebar:    #1e0e12;
+  --adm-card:       #220d14;
   --adm-line:       rgba(255, 255, 255, 0.06);
-  --adm-line-2:     rgba(255, 255, 255, 0.09);
+  --adm-line-2:     rgba(138, 31, 46, 0.22);
   --adm-fill:       rgba(255, 255, 255, 0.03);
   --adm-dim:        rgba(255, 255, 255, 0.4);
-  --adm-accent:     oklch(62% 0.20 8);
-  --adm-accent-lt:  oklch(70% 0.18 8);
-  --adm-accent-bg:  oklch(62% 0.20 8 / 0.14);
-  --adm-accent-dim: oklch(62% 0.20 8 / 0.08);
+  --adm-accent:     #8a1f2e;
+  --adm-accent-lt:  #b83a50;
+  --adm-accent-bg:  rgba(138, 31, 46, 0.14);
+  --adm-accent-dim: rgba(138, 31, 46, 0.08);
+  --adm-gold:       #c9a96e;
   --adm-ok:         #4caf50;
   --adm-warn:       #f59e0b;
   --adm-bad:        #e24b4a;
@@ -29,7 +30,7 @@
   width: 220px;
   flex-shrink: 0;
   background: var(--adm-sidebar);
-  border-right: 1px solid oklch(70% 0.22 8 / 0.12);
+  border-right: 1px solid rgba(138, 31, 46, 0.20);
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -39,8 +40,8 @@
 
 .adm__brand {
   padding: 24px 20px 20px;
-  border-bottom: 1px solid oklch(70% 0.22 8 / 0.18);
-  background: oklch(18% 0.08 8);
+  border-bottom: 1px solid rgba(138, 31, 46, 0.25);
+  background: #2a0f17;
 }
 
 .adm__logo-unit {
@@ -149,7 +150,7 @@
 
 /* ── Top bar ──────────────────────────────────────────────────────────────── */
 .adm__topbar {
-  background: oklch(8% 0.015 10);
+  background: #160a0d;
   border-bottom: 1px solid var(--adm-line-2);
   padding: 0 28px;
   display: flex;
@@ -185,7 +186,7 @@
   letter-spacing: 1.5px;
   text-transform: uppercase;
   background: var(--adm-accent-bg);
-  border: 1px solid oklch(70% 0.22 8 / 0.25);
+  border: 1px solid rgba(138,31,46,0.25);
   padding: 2px 8px;
   border-radius: 3px;
   color: var(--adm-accent);

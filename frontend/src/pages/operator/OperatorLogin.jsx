@@ -7,7 +7,7 @@ import OperatorLoginForm from './OperatorLoginForm'
 
 const page = {
   minHeight: '100vh',
-  background: 'oklch(6% 0.008 10)',
+  background: '#160a0d',
   display: 'flex',
   position: 'relative',
   alignItems: 'center',

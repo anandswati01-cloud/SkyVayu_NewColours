@@ -53,8 +53,8 @@ export default function Register() {
     }
   }
 
-  const input = { background: 'var(--white-10)', border: '1px solid var(--white-10)', borderRadius: 2, padding: '12px 16px', color: 'var(--white)', fontFamily: 'var(--font-body)', fontSize: 15, outline: 'none', width: '100%' }
-  const label = { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--white-60)', marginBottom: 8, display: 'block' }
+  const input = { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 2, padding: '12px 16px', color: 'rgba(255,255,255,0.92)', fontFamily: 'var(--font-b)', fontSize: 15, outline: 'none', width: '100%' }
+  const label = { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 8, display: 'block' }
 
   return (
     <DocPage
@@ -68,7 +68,7 @@ export default function Register() {
         <div style={doc.note}>
           <strong style={doc.strong}>Request received.</strong> Our team will contact you at {form.email} — usually
           the same working day. In the meantime you can{' '}
-          <Link to="/fleet" style={{ color: 'var(--gold)' }}>browse the fleet</Link>.
+          <Link to="/fleet" style={{ color: '#b83a50' }}>browse the fleet</Link>.
         </div>
       ) : (
         <>
@@ -107,13 +107,13 @@ export default function Register() {
                 placeholder="Routes you fly often, roughly how many trips a year, typical passenger count" />
             </div>
             <button type="submit" disabled={sending}
-              style={{ justifySelf: 'start', background: sending ? 'rgba(251,191,36,0.5)' : 'var(--gold)', color: 'var(--navy)', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '14px 32px', borderRadius: 2, border: 'none', cursor: sending ? 'not-allowed' : 'pointer', fontWeight: 500 }}>
+              style={{ justifySelf: 'start', background: sending ? 'rgba(138,31,46,0.5)' : '#8a1f2e', color: '#fff', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '14px 32px', borderRadius: 2, border: 'none', cursor: sending ? 'not-allowed' : 'pointer', fontWeight: 500 }}>
               {sending ? 'Sending…' : 'Request Membership'}
             </button>
           </form>
 
           <p style={{ ...doc.p, marginTop: 32 }}>
-            Not what you were looking for? The <Link to="/help" style={{ color: 'var(--gold)' }}>Help Centre</Link>{' '}
+            Not what you were looking for? The <Link to="/help" style={{ color: '#b83a50' }}>Help Centre</Link>{' '}
             covers booking, payments and cancellations.
           </p>
         </>

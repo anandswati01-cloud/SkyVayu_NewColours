@@ -53,12 +53,12 @@ export default function AdminLogin() {
     else setForgotMsg({ text: 'Reset link sent! Check your inbox.', type: 'success' })
   }
 
-  const BURGUNDY = 'oklch(62% 0.20 8)'
+  const BURGUNDY = '#8a1f2e'
   const s = {
-    page: { minHeight: '100vh', background: 'oklch(6% 0.008 10)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, position: 'relative', overflow: 'hidden' },
+    page: { minHeight: '100vh', background: '#160a0d', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, position: 'relative', overflow: 'hidden' },
     bg: { position: 'absolute', inset: 0, backgroundImage: "url('/airplane.png')", backgroundSize: 'cover', backgroundPosition: '50% 40%', filter: 'brightness(0.25)', zIndex: 0 },
-    overlay: { position: 'absolute', inset: 0, background: 'linear-gradient(oklch(6% 0.008 10 / 0.5) 0%, oklch(6% 0.008 10 / 0.7) 55%, oklch(6% 0.008 10) 100%)', zIndex: 1 },
-    box: { background: 'oklch(9% 0.012 10 / 0.9)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: `1px solid oklch(62% 0.20 8 / 0.18)`, borderRadius: 8, padding: '36px 36px', width: '100%', maxWidth: 380, position: 'relative', zIndex: 2, boxShadow: '0 8px 48px rgba(0,0,0,0.5)' },
+    overlay: { position: 'absolute', inset: 0, background: 'linear-gradient(rgba(22,10,13,0.5) 0%, rgba(22,10,13,0.7) 55%, #160a0d 100%)', zIndex: 1 },
+    box: { background: 'rgba(34,13,20,0.9)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: `1px solid rgba(138,31,46,0.18)`, borderRadius: 8, padding: '36px 36px', width: '100%', maxWidth: 380, position: 'relative', zIndex: 2, boxShadow: '0 8px 48px rgba(0,0,0,0.5)' },
     label: { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', display: 'block', marginBottom: 7 },
     input: { width: '100%', height: 44, padding: '0 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, color: '#fff', fontSize: 14, fontFamily: 'var(--font-b)', outline: 'none' },
     btn: { width: '100%', height: 44, background: BURGUNDY, color: '#fff', border: 'none', borderRadius: 4, fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 500, letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer', marginTop: 8, transition: 'opacity 0.2s' },
@@ -98,9 +98,9 @@ export default function AdminLogin() {
       {/* Forgot Password Modal */}
       {showForgot && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }} onClick={() => { setShowForgot(false); setForgotMsg({ text: '', type: '' }) }}>
-          <div style={{ background: 'oklch(9% 0.012 10)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '36px 32px', width: '100%', maxWidth: 400, position: 'relative' }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: '#220d14', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '36px 32px', width: '100%', maxWidth: 400, position: 'relative' }} onClick={e => e.stopPropagation()}>
             <button onClick={() => setShowForgot(false)} style={{ position: 'absolute', top: 14, right: 16, background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 22, cursor: 'pointer' }}>✕</button>
-            <div style={{ fontFamily: 'var(--font-d)', color: 'oklch(62% 0.20 8)', fontSize: 20, marginBottom: 6 }}>Reset Password</div>
+            <div style={{ fontFamily: 'var(--font-d)', color: '#b83a50', fontSize: 20, marginBottom: 6 }}>Reset Password</div>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 18 }}>Enter your admin email and we'll send a reset link.</p>
             <input style={{ ...s.input, marginBottom: 12 }} type="email" placeholder="Enter your email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} />
             <button style={{ ...s.btn, marginTop: 0 }} onClick={sendReset}>Send reset link</button>

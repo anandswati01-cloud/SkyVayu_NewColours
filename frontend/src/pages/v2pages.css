@@ -14,6 +14,14 @@
  */
 
 .v2page {
+  --navy:       #160a0d;
+  --navy-mid:   #1a0c10;
+  --navy-light: #220d14;
+  --gold:       #c9a96e;
+  --gold-light: #d4b87c;
+  --white-10:   rgba(255,255,255,0.08);
+  --white-30:   rgba(255,255,255,0.30);
+  --white-60:   rgba(255,255,255,0.55);
   background: var(--navy);
 }
 
@@ -109,7 +117,7 @@
 .v2page .filter-btn.active {
   border-color: var(--gold);
   color: var(--gold);
-  background: rgba(251,191,36,0.06);
+  background: rgba(138,31,46,0.10);
 }
 
 /* ── Fleet grid ─────────────────────────────────────────────────────────────── */
@@ -134,7 +142,7 @@
 
 .v2page .aircraft-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(251,191,36,0.35);
+  border-color: rgba(184,58,80,0.35);
 }
 
 .v2page .aircraft-img-wrap {

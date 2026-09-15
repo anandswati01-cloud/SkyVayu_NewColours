@@ -3,7 +3,17 @@
    not the v1 marketing tokens, because this is account UI rather than the
    marketing front. */
 
-.pf { min-height: 100vh; background: var(--navy); padding-top: 72px; }
+.pf {
+  --navy:      #160a0d;
+  --navy-mid:  #1a0c10;
+  --navy-light:#220d14;
+  --gold:      #c9a96e;
+  --brass:     #b83a50;
+  --white-10:  rgba(255,255,255,0.08);
+  --white-30:  rgba(255,255,255,0.30);
+  --white-60:  rgba(255,255,255,0.55);
+  min-height: 100vh; background: var(--navy); padding-top: 72px;
+}
 .pf__i { max-width: 900px; margin: 0 auto; padding: 48px clamp(20px, 5vw, 48px) 80px; }
 
 .pf__title { font-family: var(--font-display); font-size: clamp(30px, 5vw, 40px); font-weight: 400; margin-bottom: 40px;font-weight:bold; }
@@ -17,7 +27,7 @@
 .kyc-badge .dot { width: 6px; height: 6px; border-radius: 50%; }
 .kyc-badge.verified { background: rgba(34,197,94,.12); color: #22c55e; border: 1px solid rgba(34,197,94,.3); }
 .kyc-badge.verified .dot { background: #22c55e; }
-.kyc-badge.pending { background: rgba(251,191,36,.12); color: var(--gold); border: 1px solid rgba(251,191,36,.3); }
+.kyc-badge.pending { background: rgba(184,58,80,.12); color: var(--gold); border: 1px solid rgba(184,58,80,.3); }
 .kyc-badge.pending .dot { background: var(--gold); }
 .kyc-badge.none { background: rgba(255,255,255,.05); color: var(--white-30); border: 1px solid var(--white-10); }
 .kyc-badge.none .dot { background: var(--white-30); }
@@ -57,7 +67,7 @@
   background: rgba(255,255,255,.05); border: 1px solid var(--white-10);
   color: var(--white-60); margin-bottom: 4px; transition: color .2s, border-color .2s, background .2s;
 }
-.tile.on .tile__ic { color: var(--gold); border-color: rgba(251,191,36,.4); background: rgba(251,191,36,.1); }
+.tile.on .tile__ic { color: var(--gold); border-color: rgba(184,58,80,.4); background: rgba(138,31,46,.1); }
 .tile__ic svg {
   width: 21px; height: 21px; fill: none; stroke: currentColor;
   stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
@@ -142,7 +152,7 @@
 .doc-row__f.picked { color: var(--gold); }
 .doc-row__btn {
   cursor: pointer; font-size: 11px; font-family: var(--font-mono); letter-spacing: 1px;
-  color: var(--gold); padding: 6px 12px; border: 1px solid rgba(251,191,36,.4);
+  color: var(--gold); padding: 6px 12px; border: 1px solid rgba(184,58,80,.4);
   border-radius: 4px; white-space: nowrap; flex-shrink: 0;
 }
 .doc-row__btn input { display: none; }
@@ -172,7 +182,7 @@
 .bk__amt { font-family: var(--font-display); font-size: 22px; color: var(--gold); }
 .bk__inv {
   margin-top: 8px; font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px;
-  text-transform: uppercase; padding: 5px 10px; border: 1px solid rgba(251,191,36,.3);
+  text-transform: uppercase; padding: 5px 10px; border: 1px solid rgba(184,58,80,.3);
   border-radius: 2px; color: var(--gold); background: transparent; cursor: pointer;
 }
 .bk__status { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 8px; border-radius: 20px; }

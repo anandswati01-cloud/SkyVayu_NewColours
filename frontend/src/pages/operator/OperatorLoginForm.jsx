@@ -17,9 +17,9 @@ import logo from '../../assets/sv-new-logo.png'
  * uses it to close itself.
  */
 
-const BURGUNDY = 'oklch(70% 0.22 8)'
-const BURGUNDY_LT = 'oklch(78% 0.18 8)'
-const BG = 'oklch(6% 0.008 10)'
+const BURGUNDY = '#8a1f2e'
+const BURGUNDY_LT = '#b83a50'
+const BG = '#160a0d'
 
 const s = {
   box: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '40px 40px', width: '100%', maxWidth: 400 },
@@ -110,7 +110,7 @@ export default function OperatorLoginForm({ onSuccess }) {
       {/* Forgot Password Modal */}
       {showForgot && (
         <div onClick={() => setShowForgot(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 99999 }}>
-          <div style={{ position: 'relative', width: '400px', background: 'oklch(9% 0.012 10)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '30px' }} onClick={e => e.stopPropagation()}>
+          <div style={{ position: 'relative', width: '400px', background: '#220d14', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '30px' }} onClick={e => e.stopPropagation()}>
             <button
               onClick={() => setShowForgot(false)}
               style={{ position: 'absolute', top: 12, right: 15, background: 'transparent', border: 'none', color: '#fff', fontSize: 22, cursor: 'pointer' }}>
@@ -164,7 +164,7 @@ function RegisterModal({ onClose }) {
 
   const s2 = {
     overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100000, overflowY: 'auto', padding: 24 },
-    modal: { background: 'oklch(9% 0.012 10)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '32px', width: '100%', maxWidth: 480, margin: 'auto' },
+    modal: { background: '#220d14', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '32px', width: '100%', maxWidth: 480, margin: 'auto' },
     hdr: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
     inp: { width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, padding: '11px 14px', color: '#fff', fontFamily: 'var(--font-b)', fontSize: 14, outline: 'none', marginBottom: 16 },
   }

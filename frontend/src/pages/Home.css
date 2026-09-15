@@ -3,7 +3,19 @@
    cannot reach the legal pages, the payment flow or the portals, which keep the
    original palette. */
 
-.v1 { background: var(--bg); color: var(--t1); font-family: var(--font-b); font-weight: 300; }
+.v1 {
+  --bg:       #160a0d;
+  --s1:       #1a0c10;
+  --s2:       #220d14;
+  --brass:    #8a1f2e;
+  --brass-lt: #b83a50;
+  --brass-dim:rgba(138,31,46,0.25);
+  --t1:       rgba(255,255,255,0.95);
+  --t2:       rgba(255,255,255,0.55);
+  --tm:       rgba(255,255,255,0.35);
+  --bd:       rgba(138,31,46,0.20);
+  background: var(--bg); color: var(--t1); font-family: var(--font-b); font-weight: 300;
+}
 .v1 *, .v1 *::before, .v1 *::after { box-sizing: border-box; }
 
 /* ── HERO ────────────────────────────────────────────────────────────────── */
@@ -31,11 +43,11 @@
 .v1 .hero__vig {
   position: absolute; inset: 0; z-index: 1;
   background:
-    linear-gradient(to bottom, oklch(7% 0.008 55 / .9) 0%, transparent 22%),
-    linear-gradient(to right, oklch(9% 0.008 55 / .55) 0%, transparent 60%),
-    linear-gradient(to top, oklch(9% 0.008 55 / .7) 0%, transparent 32%);
+    linear-gradient(to bottom, oklch(7% 0.025 8 / .9) 0%, transparent 22%),
+    linear-gradient(to right, oklch(9% 0.025 8 / .55) 0%, transparent 60%),
+    linear-gradient(to top, oklch(9% 0.025 8 / .7) 0%, transparent 32%);
 }
-.v1 .hero__topmask { position: absolute; top: 0; left: 0; right: 0; height: var(--nav-h); background: var(--bg); z-index: 2; pointer-events: none; }
+.v1 .hero__topmask { position: absolute; top: 0; left: 0; right: 0; height: var(--nav-h); background: #160a0d; z-index: 2; pointer-events: none; }
 .v1 .hero__content {
   position: relative; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end;
   padding: 0 clamp(20px,5vw,80px) 64px; max-width: var(--mw); width: 100%;

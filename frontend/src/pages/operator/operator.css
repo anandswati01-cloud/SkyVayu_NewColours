@@ -11,8 +11,8 @@
    operator has 60 minutes to answer a query and could not do it from a phone. */
 
 .op {
-  --op-bg:      oklch(6% 0.008 10);
-  --op-panel:   oklch(9% 0.012 10);
+  --op-bg:      #160a0d;
+  --op-panel:   #220d14;
   --op-line:    rgba(255, 255, 255, 0.06);
   --op-line-2:  rgba(255, 255, 255, 0.08);
   --op-fill:    rgba(255, 255, 255, 0.03);
@@ -25,12 +25,10 @@
   --op-confirmed: #2e7d52;
   --op-sidebar-w: 220px;
 
-  /* Burgundy accent — hue 8 = true red, never drifts to pink.
-     L=70% so it reads clearly as a distinct colour against the dark bg. */
-  --op-accent:    oklch(70% 0.22 8);
-  --op-accent-lt: oklch(78% 0.18 8);
-  --op-accent-bg: oklch(70% 0.22 8 / 0.18);
-  --op-accent-bg2:oklch(70% 0.22 8 / 0.11);
+  --op-accent:    #8a1f2e;
+  --op-accent-lt: #b83a50;
+  --op-accent-bg: rgba(138,31,46,0.18);
+  --op-accent-bg2:rgba(138,31,46,0.11);
 
   /* Font overrides — match fleet/about design language */
   --font-display: var(--font-d);
@@ -139,12 +137,12 @@
 
 .op-btn--cyan {
   background: var(--op-accent-bg2);
-  border-color: oklch(70% 0.22 8 / 0.45);
+  border-color: rgba(184,58,80,0.45);
   color: var(--op-accent-lt);
 }
 .op-btn--cyan:hover:not(:disabled) {
   background: var(--op-accent-bg);
-  border-color: oklch(70% 0.22 8 / 0.7);
+  border-color: rgba(184,58,80,0.7);
 }
 
 .op-btn--ghost {
@@ -185,7 +183,7 @@
 .op-inp:hover { border-color: rgba(255, 255, 255, 0.18); }
 .op-inp:focus {
   border-color: var(--op-accent);
-  background: oklch(70% 0.22 8 / 0.09);
+  background: rgba(138,31,46,0.09);
 }
 /* The native picker glyph is black-on-dark by default and effectively invisible. */
 .op-inp[type='datetime-local']::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; cursor: pointer; }
@@ -216,8 +214,8 @@
 .op__side {
   width: var(--op-sidebar-w);
   flex-shrink: 0;
-  background: oklch(10% 0.04 8);
-  border-right: 1px solid oklch(70% 0.22 8 / 0.12);
+  background: #1a0c10;
+  border-right: 1px solid rgba(138,31,46,0.12);
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -229,8 +227,8 @@
    inner wrapper collapses to the mark, which is what the caption centres on. */
 .op__brand {
   padding: 24px 20px 20px;
-  border-bottom: 1px solid oklch(70% 0.22 8 / 0.2);
-  background: oklch(18% 0.08 8);
+  border-bottom: 1px solid rgba(138,31,46,0.20);
+  background: #220d14;
 }
 .op__brand-mark {
   width: fit-content;
@@ -287,8 +285,8 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: oklch(70% 0.22 8 / 0.20);
-  border: 1px solid oklch(70% 0.22 8 / 0.45);
+  background: rgba(138,31,46,0.20);
+  border: 1px solid rgba(184,58,80,0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -592,9 +590,9 @@
   margin-bottom: 16px;
 }
 .op-note--info {
-  color: oklch(78% 0.18 8 / 0.9);
-  background: oklch(70% 0.22 8 / 0.12);
-  border: 1px solid oklch(70% 0.22 8 / 0.28);
+  color: rgba(184,58,80,0.9);
+  background: rgba(138,31,46,0.12);
+  border: 1px solid rgba(138,31,46,0.28);
   border-radius: 4px;
   padding: 10px 14px;
   margin-bottom: 0;
@@ -632,7 +630,7 @@
 
 .op-loading {
   min-height: 100vh;
-  background: oklch(6% 0.008 10);
+  background: #160a0d;
   display: flex;
   align-items: center;
   justify-content: center;

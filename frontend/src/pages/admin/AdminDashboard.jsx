@@ -83,7 +83,7 @@ function Badge({ status, label }) {
 
 function StatCard({ num, label, color }) {
   return (
-    <div style={{ background: 'oklch(11% 0.018 10)', backdropFilter: 'blur(12px)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '20px 22px' }}>
+    <div style={{ background: '#1a0c10', backdropFilter: 'blur(12px)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '20px 22px' }}>
       <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 300, color: color || 'var(--adm-accent)', lineHeight: 1, paddingBottom: 4 }}>{num}</div>
       <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>{label}</div>
     </div>
@@ -170,7 +170,7 @@ function OperatorsSection({ onCountChange }) {
   const counts = { pending: operators.filter(o => o.approval_status === 'pending').length, approved: operators.filter(o => o.approval_status === 'approved').length, rejected: operators.filter(o => o.approval_status === 'rejected').length }
 
   const tabStyle = active => ({ padding: '12px 20px', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: active ? 'var(--adm-accent)' : 'rgba(255,255,255,0.3)', borderBottom: `2px solid ${active ? 'var(--adm-accent)' : 'transparent'}`, cursor: 'pointer', background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: 8 })
-  const card = { background: 'oklch(11% 0.018 10)', backdropFilter: 'blur(12px)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '20px 24px', marginBottom: 12, transition: 'border-color 0.2s' }
+  const card = { background: '#1a0c10', backdropFilter: 'blur(12px)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '20px 24px', marginBottom: 12, transition: 'border-color 0.2s' }
 
   return (
     <div>
@@ -185,7 +185,7 @@ function OperatorsSection({ onCountChange }) {
       <div style={{ display: 'flex', borderBottom: '0.5px solid rgba(255,255,255,0.1)', marginBottom: 20 }}>
         {[['pending', 'Pending applications'], ['approved', 'Approved operators'], ['rejected', 'Rejected']].map(([key, label]) => (
           <button key={key} style={tabStyle(tab === key)} onClick={() => setTab(key)}>
-            {label} <span style={{ background: 'oklch(62% 0.20 8 / 0.14)', color: 'var(--adm-accent)', padding: '1px 6px', borderRadius: 10, fontSize: 10 }}>{counts[key]}</span>
+            {label} <span style={{ background: 'rgba(138,31,46,0.14)', color: 'var(--adm-accent)', padding: '1px 6px', borderRadius: 10, fontSize: 10 }}>{counts[key]}</span>
           </button>
         ))}
       </div>
@@ -220,7 +220,7 @@ function OperatorsSection({ onCountChange }) {
             {/* AOP Document */}
             {op.aop_document_url ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: 'rgba(255,255,255,0.04)', borderRadius: 8, border: '0.5px solid rgba(255,255,255,0.1)', marginBottom: 14 }}>
-                <div style={{ width: 32, height: 32, background: 'oklch(62% 0.20 8 / 0.08)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>📄</div>
+                <div style={{ width: 32, height: 32, background: 'rgba(138,31,46,0.08)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>📄</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 500 }}>{op.aop_document_name || "Air Operator's Permit"}</div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>AOP{op.aop_expiry_date ? ` · Expiry: ${fmtDate(op.aop_expiry_date)}` : ''}</div>
@@ -292,7 +292,7 @@ function AircraftSection({ onCountChange }) {
     if (res.ok) { showToast('Aircraft rejected', 'success'); load() } else showToast('Failed', 'error')
   }
 
-  const card = { background: 'oklch(11% 0.018 10)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '20px 24px', marginBottom: 12 }
+  const card = { background: '#1a0c10', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '20px 24px', marginBottom: 12 }
 
   return (
     <div>
@@ -316,7 +316,7 @@ function AircraftSection({ onCountChange }) {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
               {docs.map(([name, url, expiry]) => (
-                <div key={name} style={{ padding: '10px 12px', background: 'oklch(10% 0.04 8)', borderRadius: 8, border: '0.5px solid rgba(255,255,255,0.1)' }}>
+                <div key={name} style={{ padding: '10px 12px', background: '#1a0c10', borderRadius: 8, border: '0.5px solid rgba(255,255,255,0.1)' }}>
                   <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'rgba(255,255,255,0.3)', marginBottom: 6 }}>{name}</div>
                   {url ? (
                     <>
@@ -370,7 +370,7 @@ function EmployeesSection({ onCountChange }) {
     if (res.ok) { showToast('Employee rejected', 'success'); load() } else showToast('Failed', 'error')
   }
 
-  const card = { background: 'oklch(11% 0.018 10)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '20px 24px', marginBottom: 12 }
+  const card = { background: '#1a0c10', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '20px 24px', marginBottom: 12 }
 
   return (
     <div>
@@ -592,7 +592,7 @@ function PaymentsSection({ onCountChange }) {
   const stuck = issues.filter(b => b.status === 'pending_payment').length
 
   const tabStyle = active => ({ padding: '10px 18px', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: active ? 'var(--adm-accent)' : 'rgba(255,255,255,0.3)', borderBottom: `2px solid ${active ? 'var(--adm-accent)' : 'transparent'}`, cursor: 'pointer', background: 'none', border: 'none', whiteSpace: 'nowrap' })
-  const card = { background: 'oklch(11% 0.018 10)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '18px 22px', marginBottom: 12 }
+  const card = { background: '#1a0c10', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '18px 22px', marginBottom: 12 }
   const btn = (color, disabled) => ({ height: 36, padding: '0 18px', background: disabled ? 'rgba(255,255,255,0.05)' : 'transparent', border: `0.5px solid ${disabled ? 'rgba(255,255,255,0.12)' : color}`, color: disabled ? 'rgba(255,255,255,0.25)' : color, borderRadius: 8, fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', cursor: disabled ? 'not-allowed' : 'pointer' })
   const input = { height: 36, padding: '0 12px', background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.3)', borderRadius: 8, color: '#fff', fontSize: 13, fontFamily: 'var(--font-body)', outline: 'none' }
   const kv = { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 2 }
@@ -860,7 +860,7 @@ function FeedbackSection() {
   }
 
   const tabStyle = active => ({ padding: '10px 18px', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: active ? 'var(--adm-accent)' : 'rgba(255,255,255,0.3)', borderBottom: `2px solid ${active ? 'var(--adm-accent)' : 'transparent'}`, cursor: 'pointer', background: 'none', border: 'none' })
-  const card = { background: 'oklch(11% 0.018 10)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '16px 20px', marginBottom: 10 }
+  const card = { background: '#1a0c10', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '16px 20px', marginBottom: 10 }
 
   return (
     <div>
@@ -959,7 +959,7 @@ function DatabaseSection() {
       <div style={{ display: 'flex', borderBottom: '0.5px solid rgba(255,255,255,0.1)', marginBottom: 0, overflowX: 'auto' }}>
         {TABS.map(t => (
           <button key={t.key} style={tabStyle(tab === t.key)} onClick={() => setTab(t.key)}>
-            {t.key} {data[t.key] ? <span style={{ background: 'oklch(62% 0.20 8 / 0.14)', color: 'var(--adm-accent)', padding: '1px 5px', borderRadius: 8, fontSize: 9, marginLeft: 4 }}>{data[t.key].length}</span> : ''}
+            {t.key} {data[t.key] ? <span style={{ background: 'rgba(138,31,46,0.14)', color: 'var(--adm-accent)', padding: '1px 5px', borderRadius: 8, fontSize: 9, marginLeft: 4 }}>{data[t.key].length}</span> : ''}
           </button>
         ))}
       </div>
